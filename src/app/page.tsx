@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { CalendarCheck, Users, Clock, ShieldCheck } from 'lucide-react';
+import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react';
 
 const ParallaxSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -16,12 +17,10 @@ const ParallaxSection = () => {
         const sectionTop = sectionRef.current.offsetTop;
         const sectionHeight = sectionRef.current.offsetHeight;
         
-        // Check if section is in view
         if (scrollY + window.innerHeight > sectionTop && scrollY < sectionTop + sectionHeight) {
           const elements = sectionRef.current.querySelectorAll<HTMLElement>('[data-parallax-speed]');
           elements.forEach(el => {
             const speed = parseFloat(el.dataset.parallaxSpeed || "0.5");
-            // Calculate offset relative to the section's appearance in viewport
             const offset = (scrollY - sectionTop + window.innerHeight / 2) * speed * 0.1; 
             el.style.transform = `translateY(${offset}px)`;
           });
@@ -30,7 +29,7 @@ const ParallaxSection = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial call
+    handleScroll(); 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -48,7 +47,7 @@ const ParallaxSection = () => {
             { icon: <CalendarCheck className="h-10 w-10 text-primary mb-4" />, title: "Easy Booking", description: "Book slots for the current day in just a few clicks.", speed: "0.4" },
             { icon: <Users className="h-10 w-10 text-primary mb-4" />, title: "For MITWPU", description: "Exclusively for MITWPU students and faculty.", speed: "0.5" },
             { icon: <Clock className="h-10 w-10 text-primary mb-4" />, title: "Real-time Status", description: "Instantly see room availability.", speed: "0.35" },
-            { icon: <ShieldCheck className="h-10 w-10 text-primary mb-4" />, title: "Secure Access", description: "OTP authenticated accounts for your privacy.", speed: "0.45" },
+            { icon: <ShieldCheck className="h-10 w-10 text-primary mb-4" />, title: "Secure Access", description: "Authenticated accounts for your privacy.", speed: "0.45" },
           ].map((feature, index) => (
             <div key={index} className="flex flex-col items-center text-center p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition-shadow" data-parallax-speed={feature.speed}>
               {feature.icon}
@@ -67,11 +66,10 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32 text-center relative overflow-hidden">
-        {/* Background elements for parallax - subtle */}
         <div 
           className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full filter blur-2xl -z-10" 
           data-parallax-speed="0.8" 
-          style={{ transform: 'translateY(0px)' }} // Initial state for SSR
+          style={{ transform: 'translateY(0px)' }} 
         />
         <div 
           className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-accent/10 rounded-full filter blur-3xl -z-10" 
@@ -127,17 +125,41 @@ export default function HomePage() {
       
       <ParallaxSection />
 
-      <section className="py-16 md:py-24 text-center">
+      <section className="w-full py-16 md:py-24 bg-background dark:bg-neutral-900">
         <div className="container mx-auto px-4">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4">Ready to Collaborate?</h2>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-            Sign up or log in to start booking your discussion slots today.
-          </p>
-          <Link href="/signup" passHref>
-            <Button size="lg" className="font-semibold">
-              Join DiscussZone Now
-            </Button>
-          </Link>
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            <div className="lg:w-1/2">
+              <Image
+                src="https://placehold.co/600x450.png"
+                alt="Knowledge Resource Center"
+                width={600}
+                height={450}
+                className="rounded-lg shadow-xl object-cover"
+                data-ai-hint="library study"
+              />
+            </div>
+            <div className="lg:w-1/2 text-left">
+              <div className="flex items-center mb-3">
+                <Library className="h-8 w-8 text-primary mr-3" />
+                <h2 className="font-headline text-3xl md:text-4xl font-bold text-primary">
+                  Knowledge Resource Center (KRC)
+                </h2>
+              </div>
+              <p className="text-muted-foreground mb-4 text-base md:text-lg">
+                Our KRC offers a serene environment perfect for focused study and collaborative
+                learning. Equipped with extensive resources, comfortable seating, and dedicated
+                discussion rooms, it&apos;s the ideal place to enhance your academic journey.
+              </p>
+              <p className="text-muted-foreground mb-6 text-base md:text-lg">
+                Use DiscussZone to easily book discussion rooms located within the KRC.
+              </p>
+              <Link href="/booking" passHref>
+                <Button size="lg" className="font-semibold">
+                  Book a KRC Discuss Room
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>
