@@ -144,14 +144,15 @@ export default function HomePage() {
 
       <section className="w-full max-w-5xl mx-auto">
         <Image 
-          src="https://placehold.co/1200x600.png" 
-          alt="Students collaborating in a discussion room" 
+          src="https://mitwpu.edu.in/uploads/images/library_5.webp" 
+          alt="Students collaborating in a discussion room at MITWPU library" 
           width={1200} 
           height={600} 
           className="rounded-lg shadow-2xl object-cover" 
-          data-ai-hint="students collaboration" 
+          data-ai-hint="university library" 
           data-parallax-speed="0.15"
           style={{ transform: 'translateY(0px)' }}
+          priority
         />
       </section>
       
