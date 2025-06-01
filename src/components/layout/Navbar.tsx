@@ -34,10 +34,18 @@ export function Navbar() {
           <DiscussionIcon className="h-8 w-8 text-primary" />
           <span className="font-headline text-xl font-semibold">DiscussZone</span>
         </Link>
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2 md:gap-4">
           <Link href="/booking" passHref>
             <Button variant="ghost">Bookings</Button>
           </Link>
+          {user && user.isAdmin && (
+            <Link href="/admin" passHref>
+              <Button variant="ghost" className="hidden sm:inline-flex"> {/* Hidden on very small screens to avoid clutter, shown on sm and up */}
+                <Shield className="mr-2 h-4 w-4" />
+                Admin
+              </Button>
+            </Link>
+          )}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
