@@ -17,20 +17,28 @@ const generateTimeSlots = (date: Date): TimeSlot[] => {
   const openingHour = 9; // 9 AM
   const closingHour = 18; // 6 PM (last slot ends at 6 PM)
 
+  // 1. If the booking 'date' is not today, no slots.
   if (!isToday(date)) {
     return [];
   }
 
-  const now = new Date(); // Current actual time to check against closing hour for today
-  if (now.getHours() >= closingHour && isToday(date)) { 
-    return [];
+  // 2. It IS today. Check if we're past closing time.
+  const now = new Date();
+  if (now.getHours() >= closingHour) {
+    return []; // Today, but past closing time. No slots.
   }
 
+  // 3. It IS today and NOT past closing time.
+  // Generate slots from openingHour up to (but not including) closingHour.
+  // This will correctly generate future slots if it's currently before openingHour (e.g., 8 AM).
   for (let hour = openingHour; hour < closingHour; hour++) {
-    const startTime = new Date(date);
+    // Ensure slots are based on the start of the provided 'date'
+    const slotDateBase = startOfDay(date); 
+    
+    const startTime = new Date(slotDateBase);
     startTime.setHours(hour, 0, 0, 0);
 
-    const endTime = new Date(date);
+    const endTime = new Date(slotDateBase);
     endTime.setHours(hour + 1, 0, 0, 0);
     
     slots.push({
@@ -99,7 +107,6 @@ export default function BookingPage() {
       const slotEndDate = new Date(currentDate); 
       slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
       
-      // Use `currentTime` state variable for consistent past slot check
       if (slotEndDate < currentTime && isToday(currentDate)) { 
         toast({ title: "Slot Unavailable", description: "This time slot has passed.", variant: "warning" });
         return;
@@ -165,7 +172,7 @@ export default function BookingPage() {
     );
     setIsBookingDialogOpen(false);
     setSelectedBookingDetails(null);
-  }, [user, toast]); // `setRooms` is stable, so not strictly needed in deps if user and toast are the only external values used directly.
+  }, [user, toast]);
   
   return (
     <AuthGuard>
