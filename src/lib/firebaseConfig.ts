@@ -1,6 +1,6 @@
 
 // src/lib/firebaseConfig.ts
-// Last updated with user-provided config: 2024-08-21T10:15:00.000Z 
+// Last updated with user-provided config: 2024-08-21T10:15:00.000Z
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore, Timestamp, enableIndexedDbPersistence } from "firebase/firestore";
@@ -106,11 +106,22 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
         db = getFirestore(app);
         console.log("FirebaseConfig.ts: Firebase Firestore initialized.");
 
-        if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
-            // Enable offline persistence
+        // Attempt to enable offline persistence for Firestore
+        if (typeof window !== 'undefined') { // Persistence only works in browser
             enableIndexedDbPersistence(db)
                 .catch((err) => {
                     if (err.code == 'failed-precondition') {
+                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence due to multiple tabs open or other precondition issues.", err);
+                    } else if (err.code == 'unimplemented') {
+                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence because the browser does not support this feature.", err);
+                    } else {
+                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence for an unknown reason.", err);
+                    }
+                }); // Correctly close the .catch()
+        }
+
+        // Initialize Analytics if in browser and measurementId is available
+        if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
             try {
                 analytics = getAnalytics(app);
                 console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
@@ -118,16 +129,10 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
                 console.warn("FirebaseConfig.ts: Firebase Analytics initialization failed. This is often non-critical. Error:", analyticsError.message || analyticsError);
                 analytics = null;
             }
-                    // Multiple tabs open, persistence can only be enabled
-                    // in one tab at a a time.
-                    console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence due to multiple tabs open or other precondition issues.", err);
-                    } else if (err.code == 'unimplemented') {
-                    // The current browser does not support all of the
-                    // features required to enable persistence
         } else {
           console.log("FirebaseConfig.ts: Analytics not initialized (not in browser environment or no measurementId).");
         }
-    } else {
+    } else { // This is the 'else' that was causing the parsing error due to an unclosed block above
         console.error("FirebaseConfig.ts: Firebase app 'app' is undefined after initialization logic. Auth, Firestore, and Analytics cannot be initialized.");
         if(typeof window !== "undefined") alert("FirebaseConfig.ts: Firebase app object is undefined. Core services cannot start. Check console for earlier errors related to initializeApp().");
     }
@@ -172,12 +177,10 @@ PLEASE VERY CAREFULLY:
 
 Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project settings and reload the page.`;
     }
-                    console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence because the browser does not support it.", err);
-                    }
 
     if (typeof window !== "undefined") {
       const preStyle = "font-family: monospace; white-space: pre-wrap; padding: 10px; background-color: #fff0f0; border: 1px solid red; color: red;";
-      console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle);
+      console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle); // Corrected regex
       alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\n...(see console for full details)" : ""));
     }
     // @ts-ignore
