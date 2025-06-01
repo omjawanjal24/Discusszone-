@@ -4,6 +4,7 @@
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
-  # Adjusted from 1 to 3 to allow for better handling of concurrent users.
-  maxInstances: 3
+  # Adjusted to 50 to allow for better handling of concurrent users.
+  maxInstances: 50
+
 
