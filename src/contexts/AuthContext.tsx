@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       setLoading(true);
-      if (firebaseUser) {
+      if (firebaseUser && auth) { // Ensure auth is initialized
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
@@ -54,18 +54,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             gender: profileData.gender,
             role: profileData.role,
             isAdmin: profileData.isAdmin,
-            avatarUrl: profileData.avatarUrl || firebaseUser.photoURL, // photoURL from Firebase Auth is usually null unless set explicitly
+            avatarUrl: profileData.avatarUrl || firebaseUser.photoURL,
             createdAt: profileData.createdAt instanceof Timestamp ? profileData.createdAt.toDate() : profileData.createdAt,
           });
         } else {
-          // This case might happen if signup was somehow interrupted after auth creation but before Firestore doc creation,
-          // or if trying to log in with a user that exists in Auth but not in Firestore users collection.
-          // For robust handling, you might want to create the profile here or guide the user.
-          console.warn("User profile not found in Firestore for UID:", firebaseUser.uid, "This might be an old user or incomplete signup.");
-          setUser({ // Fallback to basic user data from Auth
+          console.warn("User profile not found in Firestore for UID:", firebaseUser.uid);
+          // Attempt to create a basic profile if missing - might occur if signup was interrupted
+          // or if user was created directly in Firebase console without Firestore record
+          // For now, we'll just set basic user info from Auth
+           setUser({ 
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             isVerified: firebaseUser.emailVerified,
+            isAdmin: firebaseUser.email === ADMIN_EMAIL, // Check admin status even for fallback
           });
         }
       } else {
@@ -79,14 +80,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: LoginFormValues) => {
     setLoading(true);
+    if (!auth) {
+      toast({ title: "Authentication Error", description: "Firebase Auth not initialized.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
     try {
       const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-      // onAuthStateChanged will handle fetching profile and setting user state.
       toast({ title: "Login Successful!", description: `Welcome back, ${userCredential.user.email}!` });
-      // Check if there's a redirect query parameter
       const queryParams = new URLSearchParams(window.location.search);
       const redirectUrl = queryParams.get('redirect');
-      router.push(redirectUrl || '/booking'); // Redirect to intended page or default
+      router.push(redirectUrl || '/booking'); 
     } catch (error: any) {
       console.error("Firebase login error:", error);
       toast({ title: "Login Failed", description: error.message || "Invalid email or password.", variant: "destructive" });
@@ -97,6 +101,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (signupData: SignupFormValues) => {
     setLoading(true);
+    if (!auth || !db) { // Check if db is also initialized
+      toast({ title: "Service Error", description: "Firebase services not fully initialized.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, signupData.email, signupData.password);
       const firebaseUser = userCredential.user;
@@ -107,23 +116,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         prn: signupData.prn,
         gender: signupData.gender,
         role: signupData.role,
-        isAdmin: signupData.email === ADMIN_EMAIL, // Set admin status based on email
-        isVerified: firebaseUser.emailVerified, // Will be false initially
-        avatarUrl: '', // Initialize with empty or default avatar URL
-        createdAt: new Date(), // Current timestamp
+        isAdmin: signupData.email === ADMIN_EMAIL,
+        isVerified: firebaseUser.emailVerified, 
+        avatarUrl: '', 
+        createdAt: Timestamp.fromDate(new Date()), // Use Firestore Timestamp
       };
 
       await setDoc(doc(db, "users", firebaseUser.uid), userProfile);
       console.log("User profile created in Firestore for UID:", firebaseUser.uid);
       
-      // Optional: Send email verification
-      // await sendEmailVerification(firebaseUser);
-      // toast({ title: "Signup Successful!", description: "Account created. Please check your email to verify your account." });
-      // For this app, we'll directly log them in
-      
       toast({ title: "Signup Successful!", description: "Account created. You are now logged in."});
-      // Firebase automatically signs in the user. onAuthStateChanged will then fetch the profile.
-      router.push('/booking'); // Or to a profile completion page if needed
+      router.push('/booking'); 
 
     } catch (error: any) {
       console.error("Firebase signup error:", error);
@@ -147,9 +150,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     setLoading(true);
+    if (!auth) {
+      toast({ title: "Authentication Error", description: "Firebase Auth not initialized.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
     try {
       await signOut(auth);
-      // onAuthStateChanged will set user to null
       router.push('/login');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error: any) {
