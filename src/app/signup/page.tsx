@@ -107,7 +107,7 @@ export default function SignupPage() {
                         <Input
                           type="text"
                           inputMode="numeric"
-                          autoComplete="off"
+                          autoComplete="new-password" // Changed to new-password
                           placeholder="123456"
                           {...field}
                           maxLength={6}
@@ -252,3 +252,4 @@ export default function SignupPage() {
     </div>
   );
 }
+
