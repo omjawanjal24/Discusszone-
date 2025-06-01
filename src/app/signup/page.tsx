@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -103,7 +104,14 @@ export default function SignupPage() {
                     <FormItem>
                       <FormLabel>OTP</FormLabel>
                       <FormControl>
-                        <Input placeholder="123456" {...field} maxLength={6} />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          placeholder="123456"
+                          {...field}
+                          maxLength={6}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
