@@ -6,16 +6,16 @@ import type { LoginFormValues, SignupFormValues } from '@/lib/validation';
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
-import { auth, db } from '@/lib/firebaseConfig';
+import { auth, db, Timestamp } from '@/lib/firebaseConfig'; // Added Timestamp
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  sendEmailVerification, // Optional: For explicit email verification trigger
+  // sendEmailVerification, // Optional: For explicit email verification trigger
   type User as FirebaseUser 
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore'; // Removed Timestamp from here
 
 interface AuthContextType {
   user: User | null;
@@ -38,6 +38,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Ensure auth and db are defined before trying to use them.
+    if (!auth || !db) {
+      console.error("AuthContext: Firebase auth or db not initialized. Cannot set up onAuthStateChanged listener.");
+      setLoading(false); // Stop loading if Firebase services are unavailable
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       setLoading(true);
       if (firebaseUser) {
@@ -54,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               prn: profileData.prn,
               gender: profileData.gender,
               role: profileData.role,
-              isAdmin: profileData.isAdmin,
+              isAdmin: profileData.isAdmin || firebaseUser.email === ADMIN_EMAIL, // Ensure admin check considers ADMIN_EMAIL
               avatarUrl: profileData.avatarUrl || firebaseUser.photoURL,
               createdAt: profileData.createdAt instanceof Timestamp ? profileData.createdAt.toDate() : profileData.createdAt,
             });
@@ -62,29 +69,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.warn("User profile not found in Firestore for UID:", firebaseUser.uid, " Email:", firebaseUser.email);
             toast({
               title: "Profile Incomplete",
-              description: `User profile data for ${firebaseUser.email} is missing. Please contact support if this persists.`,
-              variant: "destructive",
+              description: `User profile data for ${firebaseUser.email} is missing. A minimal profile will be used.`,
+              variant: "warning",
             });
             setUser({ // Fallback: set minimal user data from auth
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               isVerified: firebaseUser.emailVerified,
-              isAdmin: firebaseUser.email === ADMIN_EMAIL, // Fallback isAdmin check
+              isAdmin: firebaseUser.email === ADMIN_EMAIL, 
             });
           }
         } catch (error) {
           console.error("Error fetching user profile from Firestore:", error);
           toast({
             title: "Profile Load Error",
-            description: "Could not load your full profile. Please try again later.",
+            description: "Could not load your full profile. Using minimal data.",
             variant: "destructive",
           });
-          // If Firestore fails, set minimal user from auth to allow basic app access if auth is valid.
           setUser({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               isVerified: firebaseUser.emailVerified,
-              isAdmin: firebaseUser.email === ADMIN_EMAIL, // Fallback isAdmin check
+              isAdmin: firebaseUser.email === ADMIN_EMAIL,
           });
         }
       } else {
@@ -94,18 +100,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [toast]); // Added toast to dependency array
+  }, []); // Changed dependency array from [toast] to []
 
   const login = useCallback(async (credentials: LoginFormValues) => {
-    // setLoading(true); // Removed: onAuthStateChanged will handle loading state
     if (!auth) {
       toast({ title: "Authentication Error", description: "Firebase Auth not initialized.", variant: "destructive" });
-      // setLoading(false); // Removed
       return;
     }
     try {
       const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-      // User state will be set by onAuthStateChanged listener.
       toast({ title: "Login Successful!", description: `Welcome back, ${userCredential.user.email}!` });
       const queryParams = new URLSearchParams(window.location.search);
       const redirectUrl = queryParams.get('redirect');
@@ -114,16 +117,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Firebase login error:", error);
       toast({ title: "Login Failed", description: error.message || "Invalid email or password.", variant: "destructive" });
     } 
-    // finally { // Removed finally block for setLoading
-    //   setLoading(false); 
-    // }
   }, [router, toast]);
 
   const signup = useCallback(async (signupData: SignupFormValues) => {
-    // setLoading(true); // Removed
     if (!auth || !db) { 
       toast({ title: "Service Error", description: "Firebase services not fully initialized.", variant: "destructive" });
-      // setLoading(false); // Removed
       return;
     }
     try {
@@ -145,7 +143,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await setDoc(doc(db, "users", firebaseUser.uid), userProfile);
       console.log("User profile created in Firestore for UID:", firebaseUser.uid);
       
-      // User state will be set by onAuthStateChanged
       toast({ title: "Signup Successful!", description: "Account created. You are now logged in."});
       router.push('/booking'); 
 
@@ -165,30 +162,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } 
-    // finally { // Removed finally block for setLoading
-    //  setLoading(false); 
-    // }
   }, [router, toast]);
 
   const logout = useCallback(async () => {
-    // setLoading(true); // Removed
     if (!auth) {
       toast({ title: "Authentication Error", description: "Firebase Auth not initialized.", variant: "destructive" });
-      // setLoading(false); // Removed
       return;
     }
     try {
       await signOut(auth);
-      // onAuthStateChanged will set user to null and loading to false
       router.push('/login');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error: any) {
       console.error("Firebase logout error:", error);
       toast({ title: "Logout Failed", description: error.message || "Could not log out.", variant: "destructive" });
     } 
-    // finally { // Removed finally block for setLoading
-    //  setLoading(false);
-    // }
   }, [router, toast]);
 
   return (
@@ -198,7 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout, 
       signup, 
       loading, 
-      isAuthenticated: !!user && !loading // Ensure loading is false for isAuthenticated to be definitively true
+      isAuthenticated: !!user && !loading 
     }}>
       {children}
     </AuthContext.Provider>
