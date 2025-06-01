@@ -1,3 +1,145 @@
-export default function Home() {
-  return <></>;
+"use client";
+
+import React, { useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import { CalendarCheck, Users, Clock, ShieldCheck } from 'lucide-react';
+
+const ParallaxSection = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const scrollY = window.scrollY;
+        const sectionTop = sectionRef.current.offsetTop;
+        const sectionHeight = sectionRef.current.offsetHeight;
+        
+        // Check if section is in view
+        if (scrollY + window.innerHeight > sectionTop && scrollY < sectionTop + sectionHeight) {
+          const elements = sectionRef.current.querySelectorAll<HTMLElement>('[data-parallax-speed]');
+          elements.forEach(el => {
+            const speed = parseFloat(el.dataset.parallaxSpeed || "0.5");
+            // Calculate offset relative to the section's appearance in viewport
+            const offset = (scrollY - sectionTop + window.innerHeight / 2) * speed * 0.1; 
+            el.style.transform = `translateY(${offset}px)`;
+          });
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial call
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div ref={sectionRef} className="py-16 md:py-24 bg-secondary/30 dark:bg-secondary/20 overflow-hidden rounded-lg shadow-inner">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4" data-parallax-speed="0.3">Why Choose DiscussZone?</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-parallax-speed="0.2">
+            Streamline your discussion room bookings with ease and efficiency.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {[
+            { icon: <CalendarCheck className="h-10 w-10 text-primary mb-4" />, title: "Easy Booking", description: "Book slots for the current day in just a few clicks.", speed: "0.4" },
+            { icon: <Users className="h-10 w-10 text-primary mb-4" />, title: "For MITWPU", description: "Exclusively for MITWPU students and faculty.", speed: "0.5" },
+            { icon: <Clock className="h-10 w-10 text-primary mb-4" />, title: "Real-time Status", description: "Instantly see room availability.", speed: "0.35" },
+            { icon: <ShieldCheck className="h-10 w-10 text-primary mb-4" />, title: "Secure Access", description: "OTP authenticated accounts for your privacy.", speed: "0.45" },
+          ].map((feature, index) => (
+            <div key={index} className="flex flex-col items-center text-center p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition-shadow" data-parallax-speed={feature.speed}>
+              {feature.icon}
+              <h3 className="font-headline text-xl font-semibold mb-2">{feature.title}</h3>
+              <p className="text-muted-foreground">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+export default function HomePage() {
+  return (
+    <div className="flex flex-col items-center justify-center space-y-12">
+      <section className="w-full py-12 md:py-24 lg:py-32 text-center relative overflow-hidden">
+        {/* Background elements for parallax - subtle */}
+        <div 
+          className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full filter blur-2xl -z-10" 
+          data-parallax-speed="0.8" 
+          style={{ transform: 'translateY(0px)' }} // Initial state for SSR
+        />
+        <div 
+          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-accent/10 rounded-full filter blur-3xl -z-10" 
+          data-parallax-speed="0.6"
+          style={{ transform: 'translateY(0px)' }}
+        />
+        
+        <div className="container px-4 md:px-6">
+          <h1 
+            className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl mb-6"
+            data-parallax-speed="0.2"
+            style={{ transform: 'translateY(0px)' }}
+          >
+            Welcome to <span className="text-primary">DiscussZone</span>
+          </h1>
+          <p 
+            className="max-w-[700px] mx-auto text-muted-foreground md:text-xl mb-8"
+            data-parallax-speed="0.1"
+            style={{ transform: 'translateY(0px)' }}
+          >
+            Your one-stop solution for booking discussion rooms at MITWPU.
+            Plan your collaborative sessions efficiently.
+          </p>
+          <div 
+            className="space-x-4"
+            data-parallax-speed="0.05"
+            style={{ transform: 'translateY(0px)' }}
+          >
+            <Link href="/booking" passHref>
+              <Button size="lg" className="font-semibold">Book a Room</Button>
+            </Link>
+            <Link href="/signup" passHref>
+              <Button size="lg" variant="outline" className="font-semibold">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="w-full max-w-5xl mx-auto">
+        <Image 
+          src="https://placehold.co/1200x600.png" 
+          alt="Students collaborating in a discussion room" 
+          width={1200} 
+          height={600} 
+          className="rounded-lg shadow-2xl object-cover" 
+          data-ai-hint="students collaboration" 
+          data-parallax-speed="0.15"
+          style={{ transform: 'translateY(0px)' }}
+        />
+      </section>
+      
+      <ParallaxSection />
+
+      <section className="py-16 md:py-24 text-center">
+        <div className="container mx-auto px-4">
+          <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4">Ready to Collaborate?</h2>
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+            Sign up or log in to start booking your discussion slots today.
+          </p>
+          <Link href="/signup" passHref>
+            <Button size="lg" className="font-semibold">
+              Join DiscussZone Now
+            </Button>
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
 }
