@@ -1,3 +1,4 @@
+
 // src/lib/firebaseConfig.ts
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
@@ -6,7 +7,7 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 // TODO: Replace these with your actual Firebase project configuration details!
 // You can find these in your Firebase project settings.
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // Replace with your Firebase API Key
+  apiKey: "AIzaSyB4PhuGBYe8F2-3kCe69iyFzhIKJBaZi78", // Updated API Key
   authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Replace with your Firebase Auth Domain
   projectId: "YOUR_PROJECT_ID", // Replace with your Firebase Project ID
   storageBucket: "YOUR_PROJECT_ID.appspot.com", // Replace with your Firebase Storage Bucket
