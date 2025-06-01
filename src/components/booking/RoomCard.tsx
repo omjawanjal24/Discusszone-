@@ -1,12 +1,13 @@
 
 "use client";
 
-import React from 'react';
-import type { Room } from '@/types';
+import React, { useMemo } from 'react';
+import type { Room, TimeSlot } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TimeSlotButton } from './TimeSlotButton';
 import { Users } from 'lucide-react';
 import { RoomLayoutVisual } from './RoomLayoutVisual';
+import { parse, isWithinInterval } from 'date-fns';
 
 interface RoomCardProps {
   room: Room;
@@ -15,6 +16,39 @@ interface RoomCardProps {
 }
 
 const RoomCardComponent = ({ room, onBookSlot, currentTime }: RoomCardProps) => {
+
+  // Determine the occupants to display in RoomLayoutVisual
+  const displayOccupants = useMemo(() => {
+    let activeBookedSlot: TimeSlot | undefined = undefined;
+    let nextUpcomingBookedSlot: TimeSlot | undefined = undefined;
+    
+    const today = currentTime; // Base date for parsing slot times
+
+    for (const slot of room.slots) {
+      if (slot.isBooked) {
+        const startTimeToday = parse(slot.startTime, 'HH:mm', today);
+        const endTimeToday = parse(slot.endTime, 'HH:mm', today);
+
+        // Check if current time is within this slot's interval
+        if (isWithinInterval(currentTime, { start: startTimeToday, end: endTimeToday })) {
+          activeBookedSlot = slot;
+          break; // Found an active slot, prioritize this
+        }
+
+        // If slot is in the future and is the earliest one found so far
+        if (startTimeToday > currentTime) {
+          if (!nextUpcomingBookedSlot || startTimeToday < parse(nextUpcomingBookedSlot.startTime, 'HH:mm', today)) {
+            nextUpcomingBookedSlot = slot;
+          }
+        }
+      }
+    }
+    
+    const targetSlot = activeBookedSlot || nextUpcomingBookedSlot;
+    return targetSlot?.occupants;
+
+  }, [room.slots, currentTime]);
+
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
       <CardHeader>
@@ -24,7 +58,7 @@ const RoomCardComponent = ({ room, onBookSlot, currentTime }: RoomCardProps) => 
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col">
-        <RoomLayoutVisual />
+        <RoomLayoutVisual occupiedSeatsData={displayOccupants} roomCapacity={room.capacity} />
         {room.slots.length === 0 ? (
           <p className="text-muted-foreground text-center py-4">No slots available for this room today.</p>
         ) : (

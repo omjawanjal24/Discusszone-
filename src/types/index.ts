@@ -23,6 +23,7 @@ export interface TimeSlot {
   bookedByName?: string; // User's name for display
   isGroupBooking?: boolean;
   groupMembers?: GroupMember[];
+  occupants?: Array<{ seatId: string; name: string; isBooker: boolean }>; // Added for seat visual
 }
 
 export interface Room {
