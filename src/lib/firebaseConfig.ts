@@ -1,3 +1,4 @@
+
 // src/lib/firebaseConfig.ts
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
@@ -11,7 +12,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
   projectId: "cogent-dragon-460015-a8",
-  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app",
+  storageBucket: "cogent-dragon-460015-a8.appspot.com", // Changed to .appspot.com
   messagingSenderId: "923402381047",
   appId: "1:923402381047:web:bb3bdb9b9182876dbc95f2",
   measurementId: "G-S5EM2Q9XLQ"
@@ -24,7 +25,8 @@ const essentialKeys: (keyof typeof firebaseConfig)[] = ["apiKey", "authDomain", 
 let hasPlaceholders = false;
 for (const key of essentialKeys) {
   const value = firebaseConfig[key];
-  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 5) { // Basic check for placeholders or clearly invalid short values
+  // Basic check for placeholders or clearly invalid short values (e.g., less than 5 chars for most IDs/keys)
+  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 5) {
     const errorMessage = `FirebaseConfig.ts: CRITICAL ERROR - Placeholder or invalid value detected for config key: '${key}'. Value: '${value}'. Please replace it with your actual Firebase project credential in src/lib/firebaseConfig.ts.`;
     console.error(errorMessage);
     if (typeof window !== "undefined") {
@@ -34,15 +36,17 @@ for (const key of essentialKeys) {
   }
 }
 
-// Specific check if the default template project ID is still being used.
+// Specific check if the default template project ID and API key are still being used.
+// These are the exact values from the template this project was based on.
 if (firebaseConfig.projectId === "cogent-dragon-460015-a8" && firebaseConfig.apiKey === "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc") {
-    const defaultWarning = `FirebaseConfig.ts: WARNING - The Firebase configuration appears to be using the default template values for projectId and/or apiKey.
+    const defaultWarning = `FirebaseConfig.ts: WARNING - The Firebase configuration appears to be using the default template values for projectId AND apiKey.
     Project ID: ${firebaseConfig.projectId}
     API Key: ${firebaseConfig.apiKey}
-    If these are NOT your actual credentials for an active project named '${firebaseConfig.projectId}',
+    If these are NOT your actual credentials for an active project named 'cogent-dragon-460015-a8',
     you MUST replace them with YOUR OWN project's credentials from the Firebase Console (Project settings > General > Your apps > SDK setup and configuration > Config).
     Using incorrect values will lead to 'auth/configuration-not-found' or other connection errors.`;
     console.warn(defaultWarning);
+    // It's okay if these ARE the actual credentials for a project named "cogent-dragon-460015-a8", but this warning is a strong reminder to double-check.
 }
 
 
@@ -52,13 +56,14 @@ let db: Firestore;
 let analytics: Analytics | null = null;
 
 if (hasPlaceholders) {
-  const placeholderErrorMsg = "FirebaseConfig.ts: Firebase initialization HALTED due to placeholder values in the configuration. Please fix them in src/lib/firebaseConfig.ts and reload.";
+  const placeholderErrorMsg = "FirebaseConfig.ts: Firebase initialization HALTED due to placeholder or invalid values in the configuration. Please fix them in src/lib/firebaseConfig.ts and reload.";
   console.error(placeholderErrorMsg);
   if (typeof window !== "undefined") {
     alert(placeholderErrorMsg);
   }
+  // Intentionally make app unusable if config is bad
   // @ts-ignore
-  app = undefined; // Intentionally make app unusable if config is bad
+  app = undefined; 
   // @ts-ignore
   auth = undefined;
   // @ts-ignore
@@ -145,8 +150,9 @@ Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
       alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\\n...(see console for full details)" : ""));
     }
 
+    // Intentionally make app unusable if config is bad
     // @ts-ignore
-    app = undefined; // Intentionally make app unusable if config is bad
+    app = undefined; 
     // @ts-ignore
     auth = undefined;
     // @ts-ignore
@@ -156,4 +162,3 @@ Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
 }
 
 export { app, auth, db, analytics };
-    
