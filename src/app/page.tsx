@@ -74,14 +74,14 @@ const teamMembers = [
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "https://placehold.co/150x150.png", // Using placeholder
+    imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "https://placehold.co/150x150.png", // Using placeholder
+    imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
@@ -145,7 +145,7 @@ export default function HomePage() {
                 alt="Knowledge Resource Center Interior"
                 width={600}
                 height={450}
-                className="rounded-lg shadow-xl border-4 border-red-500"
+                className="rounded-lg shadow-xl"
                 data-ai-hint="library interior"
               />
             </div>
@@ -191,9 +191,9 @@ export default function HomePage() {
                     key={member.imageUrl} 
                     src={member.imageUrl}
                     alt={member.name}
-                    data-ai-hint="placeholder avatar"
                     width={150}
                     height={150}
+                    data-ai-hint="placeholder avatar"
                   />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
