@@ -67,7 +67,7 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://placehold.co/150x150.png", // Changed to placeholder for testing
+    imageUrl: "https://placehold.co/150x150.png", // Using placeholder for reliable testing
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
   },
@@ -140,7 +140,6 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <div className="lg:w-1/2">
-              {/* Standard img tag for KRC image for troubleshooting */}
               <img
                 src="https://mitwpu.edu.in/uploads/images/library_6.webp"
                 alt="Knowledge Resource Center Interior"
@@ -184,14 +183,28 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             {teamMembers.map((member) => (
               <div key={member.name} className="flex flex-col items-center text-center">
-                <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg">
-                  <AvatarImage
-                    key={member.imageUrl} 
-                    src={member.imageUrl}
-                    alt={member.name}
-                    data-ai-hint={member.name === "OM Jawanjal" ? "placeholder avatar" : "profile photo"} // Adjusted hint for OM's placeholder
-                    className="aspect-square h-full w-full"
-                  />
+                <Avatar 
+                  className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg"
+                  style={member.name === "OM Jawanjal" ? { border: '3px solid red' } : {}}
+                >
+                  {member.name === "OM Jawanjal" ? (
+                    <AvatarImage
+                      key={member.imageUrl} 
+                      src={member.imageUrl}
+                      alt={member.name}
+                      data-ai-hint="placeholder avatar"
+                      width={150}
+                      height={150}
+                    />
+                  ) : (
+                    <AvatarImage
+                      key={member.imageUrl} 
+                      src={member.imageUrl}
+                      alt={member.name}
+                      data-ai-hint="profile photo"
+                      className="aspect-square h-full w-full"
+                    />
+                  )}
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
                 {member.linkedinUrl ? (
