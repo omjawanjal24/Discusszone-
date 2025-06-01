@@ -115,7 +115,7 @@ export default function HomePage() {
             data-parallax-speed="0.2"
             style={{ transform: 'translateY(0px)' }}
           >
-            Welcome to <span className="text-primary">DiscussZone</span>
+            Welcome to <span className="text-primary dark:text-primary">DiscussZone</span>
           </h1>
           <p 
             className="max-w-[700px] mx-auto text-muted-foreground md:text-xl mb-8"
@@ -150,8 +150,6 @@ export default function HomePage() {
           height={600} 
           className="rounded-lg shadow-2xl object-cover" 
           data-ai-hint="university library" 
-          data-parallax-speed="0.15"
-          style={{ transform: 'translateY(0px)' }}
           priority
         />
       </section>
