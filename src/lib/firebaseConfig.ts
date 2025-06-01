@@ -3,7 +3,7 @@
 // Last updated with user-provided config: 2024-08-21T10:15:00.000Z 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore, Timestamp } from "firebase/firestore";
+import { getFirestore, type Firestore, Timestamp, enableIndexedDbPersistence } from "firebase/firestore";
 import { getAnalytics, type Analytics } from "firebase/analytics";
 
 // --- Configuration provided by the user ---
@@ -107,6 +107,10 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
         console.log("FirebaseConfig.ts: Firebase Firestore initialized.");
 
         if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+            // Enable offline persistence
+            enableIndexedDbPersistence(db)
+                .catch((err) => {
+                    if (err.code == 'failed-precondition') {
             try {
                 analytics = getAnalytics(app);
                 console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
@@ -114,6 +118,12 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
                 console.warn("FirebaseConfig.ts: Firebase Analytics initialization failed. This is often non-critical. Error:", analyticsError.message || analyticsError);
                 analytics = null;
             }
+                    // Multiple tabs open, persistence can only be enabled
+                    // in one tab at a a time.
+                    console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence due to multiple tabs open or other precondition issues.", err);
+                    } else if (err.code == 'unimplemented') {
+                    // The current browser does not support all of the
+                    // features required to enable persistence
         } else {
           console.log("FirebaseConfig.ts: Analytics not initialized (not in browser environment or no measurementId).");
         }
@@ -162,6 +172,8 @@ PLEASE VERY CAREFULLY:
 
 Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project settings and reload the page.`;
     }
+                    console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence because the browser does not support it.", err);
+                    }
 
     if (typeof window !== "undefined") {
       const preStyle = "font-family: monospace; white-space: pre-wrap; padding: 10px; background-color: #fff0f0; border: 1px solid red; color: red;";
