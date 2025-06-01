@@ -20,6 +20,7 @@ export default function SignupPage() {
   const [showOtpForm, setShowOtpForm] = useState(false);
   const [signupData, setSignupData] = useState<SignupFormValues | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOtpReadOnly, setIsOtpReadOnly] = React.useState(true); // Added for OTP field
   const { signup } = useAuth();
   const { toast } = useToast();
 
@@ -47,6 +48,7 @@ export default function SignupPage() {
     console.log('Simulating OTP sent to:', data.email);
     setSignupData(data);
     setShowOtpForm(true);
+    setIsOtpReadOnly(true); // Reset readOnly state when OTP form is shown
     setIsLoading(false);
     toast({
       title: "OTP Sent",
@@ -111,6 +113,8 @@ export default function SignupPage() {
                           placeholder="123456"
                           {...field}
                           maxLength={6}
+                          readOnly={isOtpReadOnly}
+                          onFocus={() => setIsOtpReadOnly(false)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -122,7 +126,7 @@ export default function SignupPage() {
                 </Button>
               </form>
             </Form>
-            <Button variant="link" onClick={() => setShowOtpForm(false)} className="mt-4 w-full">
+            <Button variant="link" onClick={() => { setShowOtpForm(false); setIsOtpReadOnly(true); }} className="mt-4 w-full">
               Back to Signup
             </Button>
           </CardContent>
