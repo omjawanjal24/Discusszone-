@@ -92,6 +92,7 @@ New Config ProjectID: ${firebaseConfig.projectId}
 Error: ${secondaryAppError.message || 'Unknown error'}
 This is highly unusual. Check if multiple Firebase instances are being managed or if your configuration is truly correct for the primary app.`;
             if (typeof window !== "undefined") alert(alertMessage);
+            // @ts-ignore
             app = undefined;
         }
       } else {
@@ -106,19 +107,26 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
         db = getFirestore(app);
         console.log("FirebaseConfig.ts: Firebase Firestore initialized.");
 
-        // Attempt to enable offline persistence for Firestore
         if (typeof window !== 'undefined') { // Persistence only works in browser
             enableIndexedDbPersistence(db)
                 .then(() => {
                     console.log("FirebaseConfig.ts: Firestore IndexedDB persistence enabled successfully. Firestore documents can now be cached for offline access.");
+                    // alert("FirebaseConfig.ts: Firestore Offline Data READY (Persistence Enabled)"); // Optional: For explicit success confirmation
                 })
                 .catch((err) => {
-                    if (err.code == 'failed-precondition') {
-                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence due to multiple tabs open or other precondition issues. Firestore will operate with in-memory cache for this session.", err);
-                    } else if (err.code == 'unimplemented') {
-                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence because the browser does not support this feature. Firestore will operate with in-memory cache for this session.", err);
+                    let alertMessage = "";
+                    if (err.code === 'failed-precondition') {
+                        alertMessage = "FirebaseConfig.ts: OFFLINE DATA WARNING - Failed to enable Firestore offline persistence. This often happens if you have multiple tabs of this application open. Close other tabs and hard refresh this one for better offline support. Firestore will use a temporary in-memory cache for this session.";
+                        console.warn(alertMessage, err);
+                    } else if (err.code === 'unimplemented') {
+                        alertMessage = "FirebaseConfig.ts: OFFLINE DATA WARNING - Your browser does not support Firestore offline persistence. Offline features will be limited. Firestore will use a temporary in-memory cache for this session.";
+                        console.warn(alertMessage, err);
                     } else {
-                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence for an unknown reason. Firestore will operate with in-memory cache for this session.", err);
+                        alertMessage = `FirebaseConfig.ts: OFFLINE DATA WARNING - Failed to enable Firestore offline persistence for an unknown reason (Code: ${err.code}). Offline features will be limited. Firestore will use a temporary in-memory cache for this session.`;
+                        console.warn(alertMessage, err);
+                    }
+                    if (typeof window !== "undefined" && alertMessage) {
+                        alert(alertMessage); // Make persistence failure very obvious
                     }
                 });
         }
@@ -197,4 +205,5 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
 }
 
 export { app, auth, db, analytics, Timestamp };
+    
     
