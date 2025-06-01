@@ -7,13 +7,13 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 // TODO: Replace these with your actual Firebase project configuration details!
 // You can find these in your Firebase project settings.
 const firebaseConfig = {
-  apiKey: "AIzaSyB4PhuGBYe8F2-3kCe69iyFzhIKJBaZi78", // Updated API Key
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Replace with your Firebase Auth Domain
-  projectId: "YOUR_PROJECT_ID", // Replace with your Firebase Project ID
-  storageBucket: "YOUR_PROJECT_ID.appspot.com", // Replace with your Firebase Storage Bucket
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Firebase Messaging Sender ID
-  appId: "YOUR_APP_ID", // Replace with your Firebase App ID
-  measurementId: "YOUR_MEASUREMENT_ID" // Optional: Replace with your Firebase Measurement ID
+  apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
+  authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
+  projectId: "cogent-dragon-460015-a8",
+  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app",
+  messagingSenderId: "923402381047",
+  appId: "1:923402381047:web:bb3bdb9b9182876dbc95f2",
+  measurementId: "G-S5EM2Q9XLQ"
 };
 
 let app: FirebaseApp;
