@@ -6,13 +6,13 @@ import type { LoginFormValues, SignupFormValues } from '@/lib/validation';
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
-import { auth, db, Timestamp } from '@/lib/firebaseConfig'; 
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
+import { auth, db, Timestamp } from '@/lib/firebaseConfig';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
-  type User as FirebaseUser 
+  type User as FirebaseUser
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!auth || !db) {
       console.error("AuthContext: Firebase auth or db not initialized. Cannot set up onAuthStateChanged listener.");
-      setLoading(false); 
+      setLoading(false);
       return;
     }
 
@@ -62,47 +62,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               avatarUrl: profileData.avatarUrl || firebaseUser.photoURL,
               createdAt: profileData.createdAt instanceof Timestamp ? profileData.createdAt.toDate() : profileData.createdAt,
             });
+            console.log("AuthContext: User profile loaded from Firestore for", firebaseUser.email);
           } else {
-            console.warn("User profile not found in Firestore for UID:", firebaseUser.uid, " Email:", firebaseUser.email);
+            console.warn("AuthContext: User profile not found in Firestore for UID:", firebaseUser.uid, " Email:", firebaseUser.email);
             toast({
               title: "Profile Incomplete",
-              description: `User profile data for ${firebaseUser.email} is missing. A minimal profile will be used. This can happen if the account was just created and data is still syncing, or if profile creation failed.`,
-              variant: "warning", 
+              description: `User profile data for ${firebaseUser.email} is missing. Using minimal profile.`,
+              variant: "warning",
             });
-            setUser({ 
+            setUser({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               isVerified: firebaseUser.emailVerified,
-              isAdmin: firebaseUser.email === ADMIN_EMAIL, 
+              isAdmin: firebaseUser.email === ADMIN_EMAIL,
             });
           }
         } catch (error: any) {
-          console.error("Error fetching user profile from Firestore:", error);
+          console.error("AuthContext: Error fetching user profile from Firestore:", error);
           let description = "Could not load your full profile. Using minimal data.";
-          // Check if the error message indicates the client is offline
           if (error.message && (error.message.includes("client is offline") || error.message.includes("Failed to get document because the client is offline"))) {
               description = "You are offline. Full profile data could not be loaded from the server. Using cached or minimal data if available.";
           }
           toast({
             title: "Profile Load Issue",
             description: description,
-            variant: "warning", 
+            variant: "warning",
           });
-          setUser({
+          const minimalUser = {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               isVerified: firebaseUser.emailVerified,
-              isAdmin: firebaseUser.email === ADMIN_EMAIL,
-          });
+              isAdmin: firebaseUser.email === ADMIN_EMAIL, // Basic admin check if profile fails
+          };
+          setUser(minimalUser);
+          console.log("AuthContext: Fallback to minimal user data due to Firestore fetch error for:", firebaseUser.email, "Minimal data:", minimalUser);
         }
       } else {
         setUser(null);
+        console.log("AuthContext: No Firebase user authenticated.");
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []); 
+  }, []);
 
   const login = useCallback(async (credentials: LoginFormValues) => {
     if (!auth) {
@@ -114,16 +117,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Login Successful!", description: `Welcome back, ${userCredential.user.email}!` });
       const queryParams = new URLSearchParams(window.location.search);
       const redirectUrl = queryParams.get('redirect');
-      router.push(redirectUrl || '/booking'); 
+      router.push(redirectUrl || '/booking');
     } catch (error: any) {
       console.error("Firebase login error:", error);
       toast({ title: "Login Failed", description: error.message || "Invalid email or password.", variant: "destructive" });
       return Promise.reject(error);
-    } 
+    }
   }, [router, toast]);
 
   const signup = useCallback(async (signupData: SignupFormValues) => {
-    if (!auth || !db) { 
+    if (!auth || !db) {
       toast({ title: "Service Error", description: "Firebase services not fully initialized.", variant: "destructive" });
       return Promise.reject(new Error("Firebase services not fully initialized."));
     }
@@ -138,16 +141,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         gender: signupData.gender,
         role: signupData.role,
         isAdmin: signupData.email === ADMIN_EMAIL,
-        isVerified: firebaseUser.emailVerified, 
-        avatarUrl: '', 
+        isVerified: firebaseUser.emailVerified,
+        avatarUrl: '',
         createdAt: Timestamp.fromDate(new Date()),
       };
 
       await setDoc(doc(db, "users", firebaseUser.uid), userProfile);
-      console.log("User profile created in Firestore for UID:", firebaseUser.uid);
-      
+      console.log("AuthContext: User profile created in Firestore for UID:", firebaseUser.uid);
+
       toast({ title: "Signup Successful!", description: "Account created. You are now logged in."});
-      router.push('/booking'); 
+      router.push('/booking');
 
     } catch (error: any) {
       console.error("Firebase signup error:", error);
@@ -165,7 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
       return Promise.reject(error);
-    } 
+    }
   }, [router, toast]);
 
   const logout = useCallback(async () => {
@@ -181,17 +184,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Firebase logout error:", error);
       toast({ title: "Logout Failed", description: error.message || "Could not log out.", variant: "destructive" });
       return Promise.reject(error);
-    } 
+    }
   }, [router, toast]);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      signup, 
-      loading, 
-      isAuthenticated: !!user && !loading 
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      signup,
+      loading,
+      isAuthenticated: !!user && !loading
     }}>
       {children}
     </AuthContext.Provider>
