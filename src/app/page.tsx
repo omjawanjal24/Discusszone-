@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+// import Image from 'next/image'; // Keep standard img for KRC as per previous steps
 import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -18,12 +18,13 @@ const ParallaxSection = () => {
         const sectionTop = sectionRef.current.offsetTop;
         const sectionHeight = sectionRef.current.offsetHeight;
         
-        if (sectionRef.current && scrollY + window.innerHeight > sectionTop && scrollY < sectionTop + sectionHeight) {
+        if (scrollY + window.innerHeight > sectionTop && scrollY < sectionTop + sectionHeight) {
           const elements = sectionRef.current.querySelectorAll<HTMLElement>('[data-parallax-speed]');
           elements.forEach(el => {
             const speed = parseFloat(el.dataset.parallaxSpeed || "0.5");
-            const relativeScroll = scrollY - sectionTop + (window.innerHeight / 2) - (sectionHeight / 2);
-            const offset = relativeScroll * speed * 0.05;
+            // Adjust calculation to make effect more noticeable from start of section visibility
+            const visibilityFactor = Math.max(0, Math.min(1, (scrollY + window.innerHeight - sectionTop) / (window.innerHeight + sectionHeight)));
+            const offset = (visibilityFactor - 0.5) * sectionHeight * speed * 0.2; // Adjusted intensity
             el.style.transform = `translateY(${offset}px)`;
           });
         }
@@ -31,12 +32,12 @@ const ParallaxSection = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // handleScroll(); 
+    handleScroll(); // Initial call
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <div ref={sectionRef} className="py-16 md:py-24 bg-secondary/30 dark:bg-secondary/20 overflow-hidden rounded-lg shadow-inner">
+    <div ref={sectionRef} className="py-16 md:py-24 bg-secondary/30 dark:bg-secondary/20 overflow-hidden rounded-lg shadow-inner animate-fadeIn" style={{ animationDelay: '0.5s' }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="font-headline text-3xl md:text-4xl font-bold mb-4" data-parallax-speed="0.3">Why Choose DiscussZone?</h2>
@@ -51,7 +52,11 @@ const ParallaxSection = () => {
             { icon: <Clock className="h-10 w-10 text-primary mb-4" />, title: "Real-time Status", description: "Instantly see room availability.", speed: "0.35" },
             { icon: <ShieldCheck className="h-10 w-10 text-primary mb-4" />, title: "Secure Access", description: "Authenticated accounts for your privacy.", speed: "0.45" },
           ].map((feature, index) => (
-            <div key={index} className="flex flex-col items-center text-center p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition-shadow" data-parallax-speed={feature.speed}>
+            <div 
+              key={index} 
+              className="flex flex-col items-center text-center p-6 bg-card rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300" 
+              data-parallax-speed={feature.speed}
+            >
               {feature.icon}
               <h3 className="font-headline text-xl font-semibold mb-2">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.description}</p>
@@ -67,23 +72,26 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "/images/om-jawanjal.png",
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
+    dataAiHint: "profile avatar",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "/images/subhajit-dolai.png",
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
+    dataAiHint: "profile avatar",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "/images/praveenkumar-vaidya.png",
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
+    dataAiHint: "profile avatar",
   },
   {
     name: "Kalyani Ghokle",
@@ -91,6 +99,7 @@ const teamMembers = [
     imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: null,
     avatarHint: "KG",
+    dataAiHint: "placeholder avatar",
   },
 ];
 
@@ -98,7 +107,7 @@ const teamMembers = [
 export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
-      <section className="w-full py-12 md:py-24 lg:py-32 text-center relative">
+      <section className="w-full py-12 md:py-24 lg:py-32 text-center relative overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center z-0"
           style={{ backgroundImage: "url('https://mitwpu.edu.in/uploads/images/library_5.webp')" }}
@@ -107,18 +116,21 @@ export default function HomePage() {
         </div>
         <div className="container px-4 md:px-6 relative z-10">
           <h1
-            className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl mb-6 text-white"
+            className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl mb-6 text-white animate-fadeInUp"
+            style={{ animationDelay: '0.2s' }}
           >
             Welcome to <span className="text-yellow-400">DiscussZone</span>
           </h1>
           <p
-            className="max-w-[700px] mx-auto text-gray-100 md:text-xl mb-8"
+            className="max-w-[700px] mx-auto text-gray-100 md:text-xl mb-8 animate-fadeInUp"
+            style={{ animationDelay: '0.4s' }}
           >
             Your one-stop solution for booking discussion rooms at MITWPU.
             Plan your collaborative sessions efficiently.
           </p>
           <div
-            className="space-x-4"
+            className="space-x-4 animate-fadeInUp"
+            style={{ animationDelay: '0.6s' }}
           >
             <Link href="/booking" passHref>
               <Button size="lg" className="font-semibold bg-yellow-500 hover:bg-yellow-600 text-black">
@@ -136,10 +148,10 @@ export default function HomePage() {
       
       <ParallaxSection />
 
-      <section className="w-full py-16 md:py-24 bg-background dark:bg-neutral-900">
+      <section className="w-full py-16 md:py-24 bg-background dark:bg-neutral-900 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-            <div className="lg:w-1/2">
+            <div className="lg:w-1/2 animate-scaleIn" style={{ animationDelay: '0.2s' }}>
               <img
                 src="https://mitwpu.edu.in/uploads/images/library_6.webp"
                 alt="Knowledge Resource Center Interior"
@@ -149,7 +161,7 @@ export default function HomePage() {
                 data-ai-hint="library interior"
               />
             </div>
-            <div className="lg:w-1/2 text-left">
+            <div className="lg:w-1/2 text-left animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center mb-3">
                 <Library className="h-8 w-8 text-primary mr-3" />
                 <h2 className="font-headline text-3xl md:text-4xl font-bold text-primary">
@@ -174,23 +186,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="w-full py-16 md:py-24 bg-slate-800 dark:bg-slate-900 text-slate-100">
+      <section className="w-full py-16 md:py-24 bg-slate-800 dark:bg-slate-900 text-slate-100 overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 md:mb-16">
+          <div className="text-center mb-12 md:mb-16 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
             <h2 className="font-headline text-3xl md:text-4xl font-bold mb-2 text-yellow-400">Core Team</h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto"></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-            {teamMembers.map((member) => (
-              <div key={member.name} className="flex flex-col items-center text-center">
-                <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg">
+            {teamMembers.map((member, index) => (
+              <div 
+                key={member.name} 
+                className="flex flex-col items-center text-center animate-scaleIn"
+                style={{ animationDelay: `${0.2 + index * 0.15}s` }}
+              >
+                <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg" style={member.name === "OM Jawanjal" ? { border: '2px solid red' } : {}}>
                   <AvatarImage
-                    key={member.imageUrl} 
                     src={member.imageUrl}
                     alt={member.name}
                     width={150}
                     height={150}
-                    data-ai-hint="placeholder avatar"
+                    data-ai-hint={member.dataAiHint}
                   />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
