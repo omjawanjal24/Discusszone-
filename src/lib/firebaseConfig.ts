@@ -6,12 +6,11 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 import { getAnalytics, type Analytics } from "firebase/analytics"; // Added Analytics
 
 // --- CRITICAL: THESE VALUES MUST EXACTLY MATCH YOUR FIREBASE PROJECT'S CONFIGURATION ---
-// These values were provided by the user.
 const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
   projectId: "cogent-dragon-460015-a8",
-  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app", // Using user-provided value
+  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app",
   messagingSenderId: "923402381047",
   appId: "1:923402381047:web:bb3bdb9b9182876dbc95f2",
   measurementId: "G-S5EM2Q9XLQ"
@@ -27,21 +26,23 @@ for (const key of essentialKeys) {
   if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 5) { // Basic check for placeholders or clearly invalid short values
     const errorMessage = `FirebaseConfig.ts: CRITICAL ERROR - Placeholder or invalid value detected for config key: '${key}'. Value: '${value}'. Please replace it with your actual Firebase project credential in src/lib/firebaseConfig.ts.`;
     console.error(errorMessage);
-    alert(errorMessage); // Make it very visible
+    if (typeof window !== "undefined") {
+      alert(errorMessage); // Make it very visible in the browser
+    }
     hasPlaceholders = true;
   }
 }
 
+// Specific check if the default template project ID is still being used.
+// This warning is helpful if these values are *not* for your actual project.
 if (firebaseConfig.projectId === "cogent-dragon-460015-a8" && firebaseConfig.apiKey === "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc") {
-    // This is a check for the template's default values.
-    // If these specific default values are still present, it's highly likely the user hasn't replaced them with their own.
     const defaultWarning = `FirebaseConfig.ts: WARNING - The Firebase configuration appears to be using the default template values for projectId and/or apiKey.
     Project ID: ${firebaseConfig.projectId}
     API Key: ${firebaseConfig.apiKey}
-    You MUST replace these with YOUR OWN project's credentials from the Firebase Console (Project settings > General > Your apps > SDK setup and configuration > Config).
-    Using default template values will lead to 'auth/configuration-not-found' or other connection errors.`;
+    If these are NOT your actual credentials for an active project named '${firebaseConfig.projectId}',
+    you MUST replace them with YOUR OWN project's credentials from the Firebase Console (Project settings > General > Your apps > SDK setup and configuration > Config).
+    Using incorrect values will lead to 'auth/configuration-not-found' or other connection errors.`;
     console.warn(defaultWarning);
-    // alert(defaultWarning); // Alerting for default values can be very noisy if user is actually using a project with this ID for testing.
 }
 
 
@@ -53,17 +54,23 @@ let analytics: Analytics | null = null; // Initialize as null
 if (hasPlaceholders) {
   const placeholderErrorMsg = "FirebaseConfig.ts: Firebase initialization HALTED due to placeholder values in the configuration. Please fix them in src/lib/firebaseConfig.ts and reload.";
   console.error(placeholderErrorMsg);
-  alert(placeholderErrorMsg);
+  if (typeof window !== "undefined") {
+    alert(placeholderErrorMsg);
+  }
   // To prevent the app from trying to initialize Firebase with clearly incorrect config,
   // we effectively stop here if placeholders are detected.
-  // You might want to throw an error or handle this more gracefully depending on app structure.
-  // For now, `auth` and `db` will remain uninitialized, leading to errors downstream if used.
+  // @ts-ignore
+  app = undefined;
+  // @ts-ignore
+  auth = undefined;
+  // @ts-ignore
+  db = undefined;
 } else {
   try {
     if (!getApps().length) {
-      console.log("FirebaseConfig.ts: No Firebase apps initialized. Initializing new app...");
+      console.log("FirebaseConfig.ts: No Firebase apps initialized. Initializing new app with projectId:", firebaseConfig.projectId);
       app = initializeApp(firebaseConfig);
-      console.log("FirebaseConfig.ts: Firebase app initialized successfully with projectId:", app.options.projectId);
+      console.log("FirebaseConfig.ts: Firebase app initialized successfully.");
     } else {
       app = getApp();
       console.log("FirebaseConfig.ts: Using existing Firebase app instance with projectId:", app.options.projectId);
@@ -71,12 +78,17 @@ if (hasPlaceholders) {
     auth = getAuth(app);
     db = getFirestore(app);
     if (typeof window !== 'undefined') { // Initialize Analytics only on client side
-        analytics = getAnalytics(app);
-        console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
+        try {
+            analytics = getAnalytics(app);
+            console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
+        } catch (analyticsError: any) {
+            console.warn("FirebaseConfig.ts: Firebase Analytics initialization failed. This is often non-critical.", analyticsError.message);
+            analytics = null; // Ensure analytics is null if it fails
+        }
     }
   } catch (error: any) {
     console.error("FirebaseConfig.ts: CRITICAL ERROR DURING FIREBASE INITIALIZATION:", error.message, error.code, error);
-    
+
     let alertMessage = `FirebaseConfig.ts: A critical error occurred during Firebase initialization.
 Error Code: ${error.code || 'N/A'}
 Error Message: ${error.message || 'Unknown error'}
@@ -86,12 +98,12 @@ The configuration object that was attempted is:
 ${JSON.stringify(firebaseConfig, null, 2)}
 
 PLEASE VERY CAREFULLY:
-1. Go to your Firebase project console.
+1. Go to your Firebase project console (for project ID: ${firebaseConfig.projectId}).
 2. Navigate to Project Settings > General tab > Your apps > SDK setup and configuration.
 3. Compare EVERY value there (apiKey, authDomain, projectId, etc.)
    with the values printed above (and in your 'src/lib/firebaseConfig.ts' file).
 4. Ensure there are NO typos and that all values are copied exactly from your Firebase project.
-5. Ensure the project ID listed is for an ACTIVE and CORRECTLY SETUP Firebase project.
+5. Ensure the project ID listed (${firebaseConfig.projectId}) is for an ACTIVE and CORRECTLY SETUP Firebase project.
 
 Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
 
@@ -99,12 +111,13 @@ Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
         alertMessage = `FirebaseConfig.ts: Firebase initialization failed with 'auth/configuration-not-found'.
         This strongly indicates the configuration object in src/lib/firebaseConfig.ts
         (apiKey: "${firebaseConfig.apiKey}", authDomain: "${firebaseConfig.authDomain}", projectId: "${firebaseConfig.projectId}", etc.)
-        does NOT match a valid and active Firebase project setup.
+        does NOT match a valid and active Firebase project setup for project ID '${firebaseConfig.projectId}'.
 
         PLEASE VERY CAREFULLY:
         1. Go to your Firebase project console.
-        2. Navigate to Project Settings > General tab > Your apps > SDK setup and configuration.
-        3. Compare EVERY value there with the values in your 'src/lib/firebaseConfig.ts' file.
+        2. Ensure you are looking at the project with ID: '${firebaseConfig.projectId}'.
+        3. Navigate to Project Settings > General tab > Your apps > SDK setup and configuration.
+        4. Compare EVERY value there with the values in your 'src/lib/firebaseConfig.ts' file.
         The values currently in your firebaseConfig.ts that were attempted are:
         apiKey: "${firebaseConfig.apiKey}"
         authDomain: "${firebaseConfig.authDomain}"
@@ -113,20 +126,23 @@ Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
         messagingSenderId: "${firebaseConfig.messagingSenderId}"
         appId: "${firebaseConfig.appId}"
         measurementId: "${firebaseConfig.measurementId}" (optional)
-        4. Ensure there are NO typos and that all values are copied exactly from YOUR Firebase project.
-        5. Ensure the project ID listed is for an ACTIVE and CORRECTLY SETUP Firebase project.
+        5. Ensure there are NO typos and that all values are copied exactly from YOUR Firebase project ('${firebaseConfig.projectId}').
+        6. Ensure the project ID listed is for an ACTIVE and CORRECTLY SETUP Firebase project.
 
         Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
     }
-    
-    const preStyle = "font-family: monospace; white-space: pre-wrap; padding: 10px; background-color: #fff0f0; border: 1px solid red; color: red;";
-    console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\\n"), preStyle);
-    alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\\n...(see console for full details)" : ""));
+
+    if (typeof window !== "undefined") {
+      const preStyle = "font-family: monospace; white-space: pre-wrap; padding: 10px; background-color: #fff0f0; border: 1px solid red; color: red;";
+      // Corrected regex: Use \s* for whitespace and \/? for an optional slash
+      console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle);
+      alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\n...(see console for full details)" : ""));
+    }
 
     // Re-throw the error or handle as appropriate for your app to prevent further execution with bad config
     // For now, to ensure auth and db are not used when uninitialized:
     // @ts-ignore
-    app = undefined; 
+    app = undefined;
     // @ts-ignore
     auth = undefined;
     // @ts-ignore
