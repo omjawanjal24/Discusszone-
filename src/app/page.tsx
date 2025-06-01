@@ -5,7 +5,8 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react';
+import { CalendarCheck, Users, Clock, ShieldCheck, Library, Linkedin } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ParallaxSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -60,6 +61,37 @@ const ParallaxSection = () => {
     </div>
   );
 };
+
+const teamMembers = [
+  {
+    name: "OM Jawanjal",
+    role: "Creator & Developer",
+    imageUrl: "https://placehold.co/150x150.png",
+    linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
+    avatarHint: "OM",
+  },
+  {
+    name: "Subhajit Dolai",
+    role: "Manager",
+    imageUrl: "https://placehold.co/150x150.png",
+    linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
+    avatarHint: "SD",
+  },
+  {
+    name: "Dr. Praveenkumar Vaidya",
+    role: "Librarian",
+    imageUrl: "https://placehold.co/150x150.png",
+    linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
+    avatarHint: "PV",
+  },
+  {
+    name: "Kalyani Ghokle",
+    role: "Asst. Librarian",
+    imageUrl: "https://placehold.co/150x150.png",
+    linkedinUrl: null, // No LinkedIn provided
+    avatarHint: "KG",
+  },
+];
 
 
 export default function HomePage() {
@@ -159,6 +191,37 @@ export default function HomePage() {
                 </a>
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="w-full py-16 md:py-24 bg-slate-800 dark:bg-slate-900 text-slate-100">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="font-headline text-3xl md:text-4xl font-bold mb-2 text-yellow-400">Core Team</h2>
+            <div className="w-24 h-1 bg-yellow-400 mx-auto"></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+            {teamMembers.map((member) => (
+              <div key={member.name} className="flex flex-col items-center text-center">
+                <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg">
+                  <AvatarImage src={member.imageUrl} alt={member.name} data-ai-hint="profile photo" />
+                  <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
+                </Avatar>
+                <h3 className="font-headline text-xl font-semibold text-white">{member.name}</h3>
+                <p className="text-yellow-300 text-sm mb-1">{member.role}</p>
+                {member.linkedinUrl && (
+                  <a
+                    href={member.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-300 hover:text-yellow-400 transition-colors inline-flex items-center"
+                  >
+                    <Linkedin size={16} className="mr-1.5" /> LinkedIn
+                  </a>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
