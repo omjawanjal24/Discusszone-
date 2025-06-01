@@ -32,3 +32,17 @@ export interface Room {
   capacity: number;
   slots: TimeSlot[];
 }
+
+export interface UserBooking {
+  id: string; // Unique ID for the booking, can be slot.id + date + room.id
+  date: string; // YYYY-MM-DD
+  roomName: string;
+  roomId: string;
+  slotId: string;
+  startTime: string; // HH:mm formatted for display
+  endTime: string; // HH:mm formatted for display
+  isGroupBooking?: boolean;
+  groupMembers?: GroupMember[];
+  occupants?: Array<{ seatId: string; name: string; isBooker: boolean }>;
+  bookedByName?: string;
+}
