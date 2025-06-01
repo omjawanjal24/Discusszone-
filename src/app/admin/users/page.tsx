@@ -12,7 +12,7 @@ import { Users, ShieldAlert } from 'lucide-react';
 const mockUsers = [
   { id: 'user1', email: 'student1@mitwpu.edu.in', prn: '1122334455', role: 'student', bookings: 5, status: 'Active' },
   { id: 'user2', email: 'faculty1@mitwpu.edu.in', prn: 'FAC987654', role: 'faculty', bookings: 2, status: 'Active' },
-  { id: 'admin@mitwpu.edu.in', email: 'admin@mitwpu.edu.in', prn: 'ADMIN00000', role: 'faculty', isAdmin: true, bookings: 0, status: 'Active' },
+  { id: 'adminUser', email: 'om.jawanjal@mitwpu.edu.in', prn: 'ADMIN00000', role: 'faculty', isAdmin: true, bookings: 0, status: 'Active' },
   { id: 'user3', email: 'student2@mitwpu.edu.in', prn: '5544332211', role: 'student', bookings: 0, status: 'Inactive' },
 ];
 

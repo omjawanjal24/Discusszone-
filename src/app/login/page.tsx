@@ -35,7 +35,7 @@ export default function LoginPage() {
 
     // Mock authentication:
     if (data.email.endsWith('@mitwpu.edu.in') || data.email.endsWith('@mitwpu.ac.in') || data.email.endsWith('@mituniversity.edu.in')) {
-      const isAdmin = data.email === 'admin@mitwpu.edu.in'; // Simulate admin user
+      const isAdmin = data.email === 'om.jawanjal@mitwpu.edu.in'; // Simulate admin user
       const mockUser: User = {
         email: data.email,
         prn: isAdmin ? 'ADMIN00000' : '0000000000', 
