@@ -67,21 +67,21 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "https://media.licdn.com/dms/image/v2/D5603AQGLmDWHGeIbFw/profile-displayphoto-shrink_800_800/B56Za5oi07GgAc-/0/1746871137057?e=1754524800&v=beta&t=b-83xeZHS1NBtijicF247tEqmSv6pZYYHk7_Out8a1g",
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "https://media.licdn.com/dms/image/v2/D4D03AQEtFjh7U8JtWg/profile-displayphoto-shrink_800_800/B4DZTRnWotHAAc-/0/1738683543453?e=1754524800&v=beta&t=_NTsoEUnSSBbFf3cOMbY1ckQbM5KuSFuwrPdaul1Gvw",
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "https://media.licdn.com/dms/image/v2/D4D03AQF4zcDyMrjxCg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1707661148633?e=1754524800&v=beta&t=6NORgeODCuHvge_ddkiIn88t0Wt-B_2uuF922RquSVU",
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
@@ -212,3 +212,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

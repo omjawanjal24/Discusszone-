@@ -18,9 +18,15 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'mitwpu.edu.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.licdn.com',
       }
     ],
   },
 };
 
 export default nextConfig;
+
+    
