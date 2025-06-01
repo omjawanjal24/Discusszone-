@@ -12,11 +12,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from "@/hooks/use-toast"; // Toast is now handled by AuthContext
+// Toast is handled by AuthContext
 
 export default function LoginPage() {
-  const { login } = useAuth(); // Auth context login
-  // const { toast } = useToast(); // Toast is now handled by AuthContext
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -29,13 +28,20 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    login(data); // Call login from AuthContext, which handles logic and toasts
-
-    setIsLoading(false);
-    // Toasts and redirection are now handled by AuthContext.login
+    try {
+      await login(data); // AuthContext.login handles toasts and redirection
+    } catch (pageError) {
+      // This catch block would only be hit if login() from AuthContext re-throws an error.
+      // Currently, AuthContext.login handles its own errors with toasts.
+      console.error("Login page caught an unexpected error:", pageError);
+    } finally {
+      // Ensure the button loading state is reset even if login() internally handles errors
+      // and doesn't re-throw, or if redirection is occurring.
+      // If redirection happens quickly, this might not be visually noticeable, which is fine.
+      if (form.formState.isSubmitted) { // Avoid race condition if component unmounts quickly
+        setIsLoading(false);
+      }
+    }
   }
 
   return (

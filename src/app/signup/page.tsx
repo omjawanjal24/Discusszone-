@@ -13,14 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
-import { useToast } from "@/hooks/use-toast";
-import { useRouter } from 'next/navigation';
+// Toast is handled by AuthContext
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth(); // Auth context signup
-  const { toast } = useToast(); // Direct toast usage
-  const router = useRouter();
+  const { signup } = useAuth();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -35,14 +32,19 @@ export default function SignupPage() {
 
   async function onSubmitSignup(data: SignupFormValues) {
     setIsLoading(true);
-    // Simulate API call if needed, though auth.signup handles localStorage directly
-    await new Promise(resolve => setTimeout(resolve, 500)); 
-    
-    signup(data); // Call the signup function from AuthContext
-    // AuthContext's signup will handle toast and redirection
-    
-    setIsLoading(false);
-    // Toast and redirection are now handled by AuthContext.signup
+    try {
+      await signup(data); // AuthContext.signup handles toasts and redirection
+    } catch (pageError) {
+      // This catch block would only be hit if signup() from AuthContext re-throws an error.
+      // Currently, AuthContext.signup handles its own errors with toasts.
+      console.error("Signup page caught an unexpected error:", pageError);
+    } finally {
+      // Ensure the button loading state is reset.
+      // If redirection happens quickly, this might not be visually noticeable.
+      if (form.formState.isSubmitted) { // Avoid race condition if component unmounts quickly
+         setIsLoading(false);
+      }
+    }
   }
 
   return (
