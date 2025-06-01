@@ -1,21 +1,22 @@
 
 // src/lib/firebaseConfig.ts
+// Last updated with user-provided config: 2024-08-20T12:30:00.000Z
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getAnalytics, type Analytics } from "firebase/analytics";
 
 // --- Configuration provided by the user ---
-// Ensure these values EXACTLY MATCH your Firebase project's configuration
-// from the Firebase Console (Project settings > General > Your apps > SDK setup and configuration > Config).
+// ENSURE THESE VALUES EXACTLY MATCH YOUR FIREBASE PROJECT'S CONFIGURATION
+// FROM THE FIREBASE CONSOLE (Project settings > General > Your apps > SDK setup and configuration > Config).
 const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
   projectId: "cogent-dragon-460015-a8",
-  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app", // Using .firebasestorage.app as per latest user input
+  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app",
   messagingSenderId: "923402381047",
-  appId: "1:923402381047:web:074980ae75c2b81fbc95f2", // UPDATED
-  measurementId: "G-J0FBKM72XN" // UPDATED
+  appId: "1:923402381047:web:074980ae75c2b81fbc95f2",
+  measurementId: "G-J0FBKM72XN"
 };
 
 // --- Diagnostic Logging & Placeholder Checks ---
@@ -25,8 +26,7 @@ const essentialKeys: (keyof typeof firebaseConfig)[] = ["apiKey", "authDomain", 
 let hasPlaceholders = false;
 for (const key of essentialKeys) {
   const value = firebaseConfig[key];
-  // More stringent check: includes common placeholders or very short values (adjust length as needed)
-  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 10 && key !== 'measurementId' && key !== 'storageBucket') {
+  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 10 && key !== 'measurementId') {
     const errorMessage = `FirebaseConfig.ts: CRITICAL ERROR - Placeholder or potentially invalid/short value detected for config key: '${key}'. Value: '${value}'. Please replace it with your actual Firebase project credential in src/lib/firebaseConfig.ts.`;
     console.error(errorMessage);
     if (typeof window !== "undefined") {
@@ -36,17 +36,21 @@ for (const key of essentialKeys) {
   }
 }
 
-if (firebaseConfig.storageBucket.endsWith(".appspot.com") && firebaseConfig.projectId + ".appspot.com" !== firebaseConfig.storageBucket) {
-    console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.appspot.com' but doesn't directly match projectId '${firebaseConfig.projectId}.appspot.com'. This might be okay if custom, but often it's an error.`);
-} else if (firebaseConfig.storageBucket.endsWith(".firebasestorage.app") && firebaseConfig.projectId + ".app.firebasestorage.app" !== firebaseConfig.storageBucket && firebaseConfig.projectId + ".firebasestorage.app" !== firebaseConfig.storageBucket ) {
-    // Allow for both projectID.app.firebasestorage.app and projectID.firebasestorage.app
-    // console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.firebasestorage.app' but doesn't directly match projectId '${firebaseConfig.projectId}.firebasestorage.app' or '${firebaseConfig.projectId}.app.firebasestorage.app'. This might be okay if custom, but often it's an error.`);
+// Check storageBucket and projectId consistency
+if (firebaseConfig.storageBucket && firebaseConfig.projectId) {
+    if (firebaseConfig.storageBucket.endsWith(".appspot.com") && firebaseConfig.projectId + ".appspot.com" !== firebaseConfig.storageBucket) {
+        console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.appspot.com' but doesn't directly match projectId '${firebaseConfig.projectId}.appspot.com'. This might be okay if custom, but often it's an error.`);
+    } else if (firebaseConfig.storageBucket.endsWith(".firebasestorage.app") &&
+               firebaseConfig.projectId + ".app.firebasestorage.app" !== firebaseConfig.storageBucket &&
+               firebaseConfig.projectId + ".firebasestorage.app" !== firebaseConfig.storageBucket ) {
+        console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.firebasestorage.app' but doesn't directly match projectId '${firebaseConfig.projectId}.firebasestorage.app' or '${firebaseConfig.projectId}.app.firebasestorage.app'. This might be okay if custom, but often it's an error.`);
+    }
 }
 
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
+let app: FirebaseApp | undefined = undefined;
+let auth: Auth | undefined = undefined;
+let db: Firestore | undefined = undefined;
 let analytics: Analytics | null = null;
 
 if (hasPlaceholders) {
@@ -55,43 +59,63 @@ if (hasPlaceholders) {
   if (typeof window !== "undefined") {
     alert(placeholderErrorMsg);
   }
-  // Intentionally make app unusable if config is bad
-  // @ts-ignore
-  app = undefined;
-  // @ts-ignore
-  auth = undefined;
-  // @ts-ignore
-  db = undefined;
+  // Services will remain undefined
 } else {
   try {
     if (!getApps().length) {
       console.log("FirebaseConfig.ts: No Firebase apps initialized. Initializing new app with projectId:", firebaseConfig.projectId);
       app = initializeApp(firebaseConfig);
-      console.log("FirebaseConfig.ts: Firebase app initialized successfully with config:", JSON.stringify(app.options, null, 2));
+      console.log("FirebaseConfig.ts: Firebase app initialized successfully. Full config used by initializeApp:", JSON.stringify(app.options, null, 2));
     } else {
-      app = getApp();
-      console.log("FirebaseConfig.ts: Using existing Firebase app instance. Current app projectId:", app.options.projectId, "Attempted config projectId:", firebaseConfig.projectId);
-      if (app.options.projectId !== firebaseConfig.projectId) {
-        console.warn("FirebaseConfig.ts: WARNING - An existing Firebase app instance has a different projectId than the current firebaseConfig. This might lead to unexpected behavior if not intentional. Re-initializing with new config.");
-        app = initializeApp(firebaseConfig, "secondary"); // Initialize as a secondary app if primary differs, or handle differently
+      const existingApp = getApp();
+      console.log("FirebaseConfig.ts: Using existing Firebase app instance. Current app projectId:", existingApp.options.projectId, "Attempted config projectId:", firebaseConfig.projectId);
+
+      if (existingApp.options.projectId !== firebaseConfig.projectId ||
+          existingApp.options.appId !== firebaseConfig.appId || // Also check appId
+          existingApp.options.apiKey !== firebaseConfig.apiKey   // And apiKey
+         ) {
+        console.warn("FirebaseConfig.ts: WARNING - An existing Firebase app instance has different critical configuration values (projectId, appId, or apiKey) than the current firebaseConfig. This can lead to major issues. Attempting to initialize a secondary app instance. If this is not intended, review your setup. Existing App Options:", JSON.stringify(existingApp.options, null, 2), "New Config:", JSON.stringify(firebaseConfig, null, 2));
+        try {
+            // Generate a unique name for the secondary app to avoid conflicts
+            const secondaryAppName = `secondary_app_${firebaseConfig.projectId}_${Date.now()}`;
+            app = initializeApp(firebaseConfig, secondaryAppName);
+            console.log(`FirebaseConfig.ts: Secondary Firebase app '${secondaryAppName}' initialized successfully due to config mismatch. Full config used:`, JSON.stringify(app.options, null, 2));
+        } catch (secondaryAppError: any) {
+            console.error(`FirebaseConfig.ts: CRITICAL ERROR trying to initialize as a secondary app after config mismatch. Primary App ProjectID: ${existingApp.options.projectId}, New Config ProjectID: ${firebaseConfig.projectId}. Error:`, secondaryAppError);
+            const alertMessage = `FirebaseConfig.ts: CRITICAL ERROR during secondary Firebase app initialization due to config mismatch.
+Original App ProjectID: ${existingApp.options.projectId}
+New Config ProjectID: ${firebaseConfig.projectId}
+Error: ${secondaryAppError.message || 'Unknown error'}
+This is highly unusual. Check if multiple Firebase instances are being managed or if your configuration is truly correct for the primary app.`;
+            if (typeof window !== "undefined") alert(alertMessage);
+            app = undefined; // Mark as unusable
+        }
+      } else {
+         console.log("FirebaseConfig.ts: Existing app's critical config values match current config. Re-using instance. Full config details:", JSON.stringify(existingApp.options, null, 2));
+         app = existingApp;
       }
     }
 
-    auth = getAuth(app);
-    console.log("FirebaseConfig.ts: Firebase Auth initialized.");
-    db = getFirestore(app);
-    console.log("FirebaseConfig.ts: Firebase Firestore initialized.");
+    if (app) {
+        auth = getAuth(app);
+        console.log("FirebaseConfig.ts: Firebase Auth initialized.");
+        db = getFirestore(app);
+        console.log("FirebaseConfig.ts: Firebase Firestore initialized.");
 
-    if (typeof window !== 'undefined' && firebaseConfig.measurementId) { // Only initialize if measurementId is present
-        try {
-            analytics = getAnalytics(app);
-            console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
-        } catch (analyticsError: any) {
-            console.warn("FirebaseConfig.ts: Firebase Analytics initialization failed. This is often non-critical for core functionality. Error:", analyticsError.message || analyticsError);
-            analytics = null;
+        if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+            try {
+                analytics = getAnalytics(app);
+                console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
+            } catch (analyticsError: any) {
+                console.warn("FirebaseConfig.ts: Firebase Analytics initialization failed. This is often non-critical. Error:", analyticsError.message || analyticsError);
+                analytics = null;
+            }
+        } else {
+          console.log("FirebaseConfig.ts: Analytics not initialized (not in browser environment or no measurementId).");
         }
     } else {
-      console.log("FirebaseConfig.ts: Analytics not initialized (not in browser environment or no measurementId).");
+        console.error("FirebaseConfig.ts: Firebase app 'app' is undefined after initialization logic. Auth, Firestore, and Analytics cannot be initialized.");
+        if(typeof window !== "undefined") alert("FirebaseConfig.ts: Firebase app object is undefined. Core services cannot start. Check console for earlier errors related to initializeApp().");
     }
 
   } catch (error: any) {
@@ -140,8 +164,6 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
       console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle);
       alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\n...(see console for full details)" : ""));
     }
-    // Re-throw the error or handle as appropriate for your app to prevent further execution with bad config
-    // For now, we'll make auth and db unusable to prevent further misleading errors.
     // @ts-ignore
     app = undefined;
     // @ts-ignore
@@ -149,7 +171,6 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
     // @ts-ignore
     db = undefined;
     analytics = null;
-    // throw error; // Optionally re-throw if you want to halt script execution entirely.
   }
 }
 
