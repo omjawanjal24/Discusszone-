@@ -67,28 +67,28 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "/images/om-jawanjal.png", // Updated
+    imageUrl: "/images/om-jawanjal.png", // Updated to local path
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "/images/subhajit-dolai.png", // Updated
+    imageUrl: "/images/subhajit-dolai.png", // Updated to local path
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "/images/praveenkumar-vaidya.png", // Updated
+    imageUrl: "/images/praveenkumar-vaidya.png", // Updated to local path
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
   {
     name: "Kalyani Ghokle",
     role: "Asst. Librarian",
-    imageUrl: "https://placehold.co/150x150.png", // Stays placeholder
+    imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: null,
     avatarHint: "KG",
   },
@@ -159,7 +159,7 @@ export default function HomePage() {
               <p className="text-muted-foreground mb-4 text-base md:text-lg">
                 Our KRC offers a serene environment perfect for focused study and collaborative
                 learning. Equipped with extensive resources, comfortable seating, and dedicated
-                discussion rooms, it&apos;s the ideal place to enhance your academic journey.
+                discussion rooms, it's the ideal place to enhance your academic journey.
               </p>
               <p className="text-muted-foreground mb-6 text-base md:text-lg">
                 Use DiscussZone to easily book discussion rooms located within the KRC.
@@ -185,6 +185,7 @@ export default function HomePage() {
               <div key={member.name} className="flex flex-col items-center text-center">
                 <Avatar 
                   className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg"
+                  style={member.name === "OM Jawanjal" ? { border: "4px solid red"} : {}}
                 >
                   <AvatarImage
                     key={member.imageUrl} 
@@ -217,4 +218,6 @@ export default function HomePage() {
     </div>
   );
 }
+    
+
     
