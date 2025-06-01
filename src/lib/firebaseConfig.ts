@@ -109,15 +109,18 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
         // Attempt to enable offline persistence for Firestore
         if (typeof window !== 'undefined') { // Persistence only works in browser
             enableIndexedDbPersistence(db)
+                .then(() => {
+                    console.log("FirebaseConfig.ts: Firestore IndexedDB persistence enabled successfully. Firestore documents can now be cached for offline access.");
+                })
                 .catch((err) => {
                     if (err.code == 'failed-precondition') {
-                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence due to multiple tabs open or other precondition issues.", err);
+                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence due to multiple tabs open or other precondition issues. Firestore will operate with in-memory cache for this session.", err);
                     } else if (err.code == 'unimplemented') {
-                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence because the browser does not support this feature.", err);
+                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence because the browser does not support this feature. Firestore will operate with in-memory cache for this session.", err);
                     } else {
-                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence for an unknown reason.", err);
+                        console.warn("FirebaseConfig.ts: Failed to enable Firestore IndexedDB persistence for an unknown reason. Firestore will operate with in-memory cache for this session.", err);
                     }
-                }); // Correctly close the .catch()
+                });
         }
 
         // Initialize Analytics if in browser and measurementId is available
@@ -132,7 +135,7 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
         } else {
           console.log("FirebaseConfig.ts: Analytics not initialized (not in browser environment or no measurementId).");
         }
-    } else { // This is the 'else' that was causing the parsing error due to an unclosed block above
+    } else {
         console.error("FirebaseConfig.ts: Firebase app 'app' is undefined after initialization logic. Auth, Firestore, and Analytics cannot be initialized.");
         if(typeof window !== "undefined") alert("FirebaseConfig.ts: Firebase app object is undefined. Core services cannot start. Check console for earlier errors related to initializeApp().");
     }
@@ -180,7 +183,7 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
 
     if (typeof window !== "undefined") {
       const preStyle = "font-family: monospace; white-space: pre-wrap; padding: 10px; background-color: #fff0f0; border: 1px solid red; color: red;";
-      console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle); // Corrected regex
+      console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle);
       alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\n...(see console for full details)" : ""));
     }
     // @ts-ignore
