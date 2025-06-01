@@ -99,36 +99,26 @@ export default function HomePage() {
     <div className="flex flex-col items-center justify-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32 text-center relative overflow-hidden">
         <div 
-          className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full filter blur-2xl -z-10" 
-          data-parallax-speed="0.8" 
-          style={{ transform: 'translateY(0px)' }} 
+          className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full filter blur-2xl -z-10"
         />
         <div 
-          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-accent/10 rounded-full filter blur-3xl -z-10" 
-          data-parallax-speed="0.6"
-          style={{ transform: 'translateY(0px)' }}
+          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-accent/10 rounded-full filter blur-3xl -z-10"
         />
         
         <div className="container px-4 md:px-6">
           <h1 
             className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl mb-6"
-            data-parallax-speed="0.2"
-            style={{ transform: 'translateY(0px)' }}
           >
             Welcome to <span className="text-primary dark:text-primary">DiscussZone</span>
           </h1>
           <p 
             className="max-w-[700px] mx-auto text-muted-foreground md:text-xl mb-8"
-            data-parallax-speed="0.1"
-            style={{ transform: 'translateY(0px)' }}
           >
             Your one-stop solution for booking discussion rooms at MITWPU.
             Plan your collaborative sessions efficiently.
           </p>
           <div 
             className="space-x-4"
-            data-parallax-speed="0.05"
-            style={{ transform: 'translateY(0px)' }}
           >
             <Link href="/booking" passHref>
               <Button size="lg" className="font-semibold">Book a Room</Button>
@@ -148,7 +138,7 @@ export default function HomePage() {
           alt="Students collaborating in a discussion room at MITWPU library" 
           width={1200} 
           height={600} 
-          className="rounded-lg shadow-2xl object-cover" 
+          className="rounded-lg shadow-2xl" 
           data-ai-hint="university library" 
           priority
         />
@@ -228,3 +218,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
