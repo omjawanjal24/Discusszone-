@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Trash2, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 const groupMemberSchema = z.object({
   name: z.string().min(1, { message: "Name is required." }),
@@ -66,11 +67,10 @@ export function GroupBookingDialog({ open, onOpenChange, room, slot, userEmail, 
   });
 
   const watchGroupMembers = form.watch("groupMembers");
-  const currentGroupSize = 1 + (watchGroupMembers?.length || 0); // Booker + added members
+  const currentGroupSize = 1 + (watchGroupMembers?.length || 0); 
   const remainingCapacity = room.capacity - currentGroupSize;
 
   useEffect(() => {
-    // Reset form when dialog opens or room/slot changes
     if (open) {
       form.reset({
         groupMembers: [],
@@ -105,11 +105,21 @@ export function GroupBookingDialog({ open, onOpenChange, room, slot, userEmail, 
   
   const formattedTerms = TERMS_AND_CONDITIONS.replace("{roomCapacity}", room.capacity.toString());
 
+  const formatTimeForDisplay = (time24: string): string => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const date = new Date(); 
+    date.setHours(hours, minutes);
+    return format(date, 'hh:mm a');
+  };
+
+  const displayStartTime = useMemo(() => formatTimeForDisplay(slot.startTime), [slot.startTime]);
+  const displayEndTime = useMemo(() => formatTimeForDisplay(slot.endTime), [slot.endTime]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Book {room.name} - {slot.startTime} to {slot.endTime}</DialogTitle>
+          <DialogTitle>Book {room.name} - {displayStartTime} to {displayEndTime}</DialogTitle>
           <DialogDescription>
             Room Capacity: {room.capacity} seats. Confirm details for your booking.
           </DialogDescription>

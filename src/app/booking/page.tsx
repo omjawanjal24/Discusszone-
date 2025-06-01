@@ -14,32 +14,26 @@ import { GroupBookingDialog } from '@/components/booking/GroupBookingDialog';
 
 const generateTimeSlots = (date: Date): TimeSlot[] => {
   const slots: TimeSlot[] = [];
-  const openingHour = 8; // Changed from 9
-  const closingHour = 20; // Changed from 18 (slots up to 19:00-20:00)
+  const openingHour = 8; 
+  const closingHour = 20; 
 
   if (!isToday(date)) {
-    return []; // Only allow booking for the current day
+    return []; 
   }
 
-  const now = new Date(); // Current time
+  const now = new Date(); 
   const currentHour = now.getHours();
   const currentMinutes = now.getMinutes();
 
-  // If it's today, but already at or past closing time, no slots
   if (currentHour >= closingHour) {
     return [];
   }
 
-  // Determine the starting hour for today's slots
-  // If current time is before opening hour, start from opening hour.
-  // If current time is during operating hours, start from the next whole hour if current minute > 0,
-  // or from current hour if current minute is 0.
   let startHourForToday = openingHour;
   if (currentHour >= openingHour) {
     startHourForToday = currentMinutes > 0 ? currentHour + 1 : currentHour;
   }
   
-  // Ensure startHourForToday is not less than openingHour
   const effectiveStartHour = Math.max(openingHour, startHourForToday);
 
 
@@ -47,7 +41,6 @@ const generateTimeSlots = (date: Date): TimeSlot[] => {
     const startTime = `${hour.toString().padStart(2, '0')}:00`;
     const endTime = `${(hour + 1).toString().padStart(2, '0')}:00`;
     slots.push({
-      // Unique ID including date to prevent clashes if we ever allow multi-day booking
       id: `slot-${date.toISOString().split('T')[0]}-${hour.toString().padStart(2, '0')}`, 
       startTime,
       endTime,
@@ -76,28 +69,25 @@ export default function BookingPage() {
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<{ room: Room; slot: TimeSlot } | null>(null);
 
-  const [currentTime, setCurrentTime] = useState(new Date()); // Centralized current time
+  const [currentTime, setCurrentTime] = useState(new Date()); 
 
   useEffect(() => {
-    // Timer to update currentTime every minute, forcing re-evaluation of past slots
     const timerId = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // 60 seconds
+    }, 60000); 
     return () => clearInterval(timerId);
   }, []);
 
   useEffect(() => {
     setIsLoading(true);
-    // Ensure currentDate is a valid Date object before proceeding
     if (currentDate instanceof Date && !isNaN(currentDate.getTime())) {
       setRooms(initialRoomsData(currentDate));
     } else {
-      // Handle invalid date case, perhaps by setting rooms to empty or logging an error
       console.error("currentDate is invalid in BookingPage useEffect");
-      setRooms([]); // Or some other default state
+      setRooms([]); 
     }
     setIsLoading(false);
-  }, [currentDate, currentTime]); // Also re-generate rooms if currentTime changes (to update available slots for today)
+  }, [currentDate, currentTime]); 
 
   const handleOpenBookingDialog = useCallback((roomId: string, slotId: string) => {
     if (!user) {
@@ -113,9 +103,8 @@ export default function BookingPage() {
     const slot = room?.slots.find(s => s.id === slotId);
 
     if (room && slot) {
-      // Check if the slot is in the past using the centralized currentTime
       const slotEndTimeParts = slot.endTime.split(':');
-      const slotEndDate = new Date(currentDate); // Use currentDate for the date part
+      const slotEndDate = new Date(currentDate); 
       slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
       
       if (slotEndDate < currentTime && isToday(currentDate)) { 
@@ -130,7 +119,14 @@ export default function BookingPage() {
       setSelectedBookingDetails({ room, slot });
       setIsBookingDialogOpen(true);
     }
-  }, [user, toast, currentDate, rooms, currentTime]); // Added currentTime as dependency
+  }, [user, toast, currentDate, rooms, currentTime]); 
+
+  const formatTimeForDisplay = (time24: string): string => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const date = new Date(); // Date part doesn't matter for formatting
+    date.setHours(hours, minutes);
+    return format(date, 'hh:mm a');
+  };
 
   const handleConfirmBooking = useCallback((roomId: string, slotId: string, groupMembers: GroupMember[], agreedToTerms: boolean) => {
     if (!user) {
@@ -145,10 +141,10 @@ export default function BookingPage() {
     setRooms(prevRooms =>
       prevRooms.map(room => {
         if (room.id === roomId) {
-          const totalPeople = 1 + groupMembers.length; // Booker + added members
+          const totalPeople = 1 + groupMembers.length; 
           if (totalPeople > room.capacity) {
             toast({ title: "Capacity Exceeded", description: `The room capacity (${room.capacity}) would be exceeded with ${totalPeople} people.`, variant: "destructive" });
-            return room; // Return room unchanged if capacity exceeded
+            return room; 
           }
 
           return {
@@ -157,19 +153,22 @@ export default function BookingPage() {
               if (slot.id === slotId) {
                 if (slot.isBooked) {
                   toast({ title: "Slot Unavailable", description: "This slot was booked by someone else just now.", variant: "destructive" });
-                  return slot; // Slot got booked by someone else
+                  return slot; 
                 }
                 const isGroupBooking = groupMembers.length > 0;
-                let bookingMessage = `You've booked ${room.name} from ${slot.startTime} to ${slot.endTime}.`;
+                const displayStartTime = formatTimeForDisplay(slot.startTime);
+                const displayEndTime = formatTimeForDisplay(slot.endTime);
+                
+                let bookingMessage = `You've booked ${room.name} from ${displayStartTime} to ${displayEndTime}.`;
                 if (isGroupBooking) {
-                  bookingMessage = `You've booked ${room.name} from ${slot.startTime} to ${slot.endTime} for yourself and ${groupMembers.length} other(s).`;
+                  bookingMessage = `You've booked ${room.name} from ${displayStartTime} to ${displayEndTime} for yourself and ${groupMembers.length} other(s).`;
                 }
                 toast({ title: "Slot Booked!", description: bookingMessage });
                 return { 
                   ...slot, 
                   isBooked: true, 
                   bookedBy: user.prn, 
-                  bookedByName: user.email, // Or a proper name if available
+                  bookedByName: user.email, 
                   isGroupBooking,
                   groupMembers: isGroupBooking ? groupMembers : undefined,
                 };
@@ -183,7 +182,7 @@ export default function BookingPage() {
     );
     setIsBookingDialogOpen(false);
     setSelectedBookingDetails(null);
-  }, [user, toast]);
+  }, [user, toast, formatTimeForDisplay]); // Added formatTimeForDisplay to dependencies
   
   return (
     <AuthGuard>
@@ -199,14 +198,14 @@ export default function BookingPage() {
         </div>
 
         <div className="flex items-center justify-center space-x-4 my-6">
-          <Button variant="outline" size="icon" disabled={true} /*onClick={() => setCurrentDate(subDays(currentDate, 1))}*/ >
+          <Button variant="outline" size="icon" disabled={true} >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-2 text-lg font-medium">
             <CalendarDays className="h-5 w-5 text-primary" />
             {format(currentDate, 'MMMM d, yyyy')}
           </div>
-          <Button variant="outline" size="icon" disabled={true} /*onClick={() => setCurrentDate(addDays(currentDate, 1))}*/ >
+          <Button variant="outline" size="icon" disabled={true} >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -228,7 +227,7 @@ export default function BookingPage() {
                 key={room.id} 
                 room={room} 
                 onBookSlot={handleOpenBookingDialog} 
-                currentTime={currentTime} // Pass currentTime down
+                currentTime={currentTime} 
               />
             ))}
           </div>
@@ -239,11 +238,11 @@ export default function BookingPage() {
           open={isBookingDialogOpen}
           onOpenChange={(open) => {
             setIsBookingDialogOpen(open);
-            if (!open) setSelectedBookingDetails(null); // Clear details when dialog is closed
+            if (!open) setSelectedBookingDetails(null); 
           }}
           room={selectedBookingDetails.room}
           slot={selectedBookingDetails.slot}
-          userEmail={user?.email || ''} // Pass current user's email
+          userEmail={user?.email || ''} 
           onConfirmBooking={handleConfirmBooking}
         />
       )}
