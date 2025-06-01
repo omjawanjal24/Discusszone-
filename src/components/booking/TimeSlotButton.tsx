@@ -78,7 +78,7 @@ const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: Time
             }
             className={cn(
               "w-full h-12 text-xs md:text-sm transition-all duration-300 ease-in-out transform",
-              "flex flex-col items-center justify-center p-1", 
+              "flex flex-col items-center justify-center px-1 py-1 gap-0.5", 
               slot.isBooked
                 ? "cursor-not-allowed" 
                 : isPastSlot
@@ -90,9 +90,9 @@ const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: Time
             disabled={slot.isBooked || isPastSlot}
             aria-label={tooltipMessage}
           >
-            <span className="font-medium">{displayStartTime}</span>
-            <span className="text-xs opacity-80">- {displayEndTime}</span>
-            {slot.isBooked && (slot.isGroupBooking ? <Users className="h-3 w-3 mt-0.5" /> : <Lock className="h-3 w-3 mt-0.5" />)}
+            <span className="font-medium leading-none">{displayStartTime}</span>
+            <span className="text-xs opacity-80 leading-none">- {displayEndTime}</span>
+            {slot.isBooked && (slot.isGroupBooking ? <Users className="h-3 w-3" /> : <Lock className="h-3 w-3" />)}
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">
@@ -108,3 +108,4 @@ const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: Time
 }
 
 export const TimeSlotButton = React.memo(TimeSlotButtonComponent);
+
