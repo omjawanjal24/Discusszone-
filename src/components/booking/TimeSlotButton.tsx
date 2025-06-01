@@ -18,7 +18,7 @@ interface TimeSlotButtonProps {
   slot: TimeSlot;
   roomId: string;
   onBookSlot: (roomId: string, slotId: string) => void;
-  currentTime: Date; 
+  currentTime: Date;
 }
 
 const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: TimeSlotButtonProps) => {
@@ -26,21 +26,21 @@ const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: Time
 
   const handleClick = useCallback(() => {
     onBookSlot(roomId, slot.id);
-    
+
     if (!slot.isBooked) {
       const slotEndTimeParts = slot.endTime.split(':');
-      const slotEndDate = new Date(currentTime); 
+      const slotEndDate = new Date(currentTime);
       slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
-      
+
       if (!(slotEndDate < currentTime && isToday(startOfDay(currentTime)))) {
          setIsClicked(true);
-         setTimeout(() => setIsClicked(false), 1500); 
+         setTimeout(() => setIsClicked(false), 1500);
       }
     }
   }, [onBookSlot, roomId, slot.id, slot.isBooked, slot.endTime, currentTime]);
-  
+
   const slotEndTimeParts = slot.endTime.split(':');
-  const slotDateContext = startOfDay(currentTime); 
+  const slotDateContext = startOfDay(currentTime);
   const slotEndDate = new Date(slotDateContext);
   slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
 
@@ -48,7 +48,7 @@ const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: Time
 
   const formatTimeForDisplay = useCallback((time24: string): string => {
     const [hours, minutes] = time24.split(':').map(Number);
-    const date = new Date(); // Date part doesn't significantly matter for hh:mm a format
+    const date = new Date();
     date.setHours(hours, minutes);
     return format(date, 'hh:mm a');
   }, []);
@@ -71,17 +71,23 @@ const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: Time
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            variant={slot.isBooked ? "destructive" : "outline"}
+            variant={
+              slot.isBooked ? "destructive" :
+              isPastSlot ? "outline" :
+              "default" // 'default' variant uses primary color (green)
+            }
             className={cn(
               "w-full h-12 text-xs md:text-sm transition-all duration-300 ease-in-out transform",
-              slot.isBooked ? "cursor-not-allowed bg-destructive/80 hover:bg-destructive text-destructive-foreground" : 
-                isPastSlot ? "cursor-not-allowed bg-muted text-muted-foreground opacity-70" : 
-                "hover:bg-primary hover:text-primary-foreground hover:scale-105 focus:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2",
-              isClicked && !slot.isBooked && !isPastSlot && "animate-slot-pulse bg-green-400 dark:bg-green-600",
-              "flex flex-col items-center justify-center p-1"
+              "flex flex-col items-center justify-center p-1", // Common classes
+              slot.isBooked
+                ? "cursor-not-allowed" // Destructive variant handles red color
+                : isPastSlot
+                ? "cursor-not-allowed bg-muted text-muted-foreground opacity-70 hover:bg-muted hover:text-muted-foreground" // Muted style for past slots
+                : "hover:scale-105 focus:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2", // Default (green) variant specific styles
+              isClicked && !slot.isBooked && !isPastSlot && "animate-slot-pulse"
             )}
             onClick={handleClick}
-            disabled={slot.isBooked || isPastSlot} 
+            disabled={slot.isBooked || isPastSlot}
             aria-label={tooltipMessage}
           >
             <span className="font-medium">{displayStartTime}</span>
