@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import type { TimeSlot } from '@/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Lock, UserCheck } from 'lucide-react';
+import { Lock, UserCheck, Users } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -21,30 +22,39 @@ export function TimeSlotButton({ slot, onClick }: TimeSlotButtonProps) {
   const [isClicked, setIsClicked] = useState(false);
 
   const handleClick = () => {
+    // The parent (BookingPage) now handles opening the dialog or showing "already booked" toast.
+    // The click on TimeSlotButton is primarily to signal intent to book this slot.
+    onClick();
+    
     if (!slot.isBooked) {
       setIsClicked(true);
-      onClick(); // Propagate click to parent
-      // Reset visual feedback after a short delay if not actually booked by parent logic
-      // Parent logic will handle the actual booking state. This is just for immediate UI feedback.
+      // Visual feedback reset is handled by dialog closure or if booking fails.
+      // For simplicity, we can keep a short timeout here if dialog isn't always shown for every click.
       setTimeout(() => setIsClicked(false), 1500); 
-    } else {
-      // If already booked, still call onClick to potentially show a message like "already booked"
-      onClick();
     }
   };
 
-  // Determine current time to disable past slots
   const [currentTime, setCurrentTime] = useState(new Date());
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
   
   const slotEndTimeParts = slot.endTime.split(':');
-  const slotEndDate = new Date(); // Assuming current day booking
+  const slotEndDate = new Date();
   slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
 
   const isPastSlot = slotEndDate < currentTime;
+
+  let tooltipMessage = `Book slot ${slot.startTime} - ${slot.endTime}`;
+  if (slot.isBooked) {
+    tooltipMessage = `Booked by: ${slot.bookedByName || slot.bookedBy}`;
+    if (slot.isGroupBooking && slot.groupMembers) {
+      tooltipMessage += ` (Group of ${1 + slot.groupMembers.length})`;
+    }
+  } else if (isPastSlot) {
+    tooltipMessage = "This time slot has passed.";
+  }
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -57,28 +67,25 @@ export function TimeSlotButton({ slot, onClick }: TimeSlotButtonProps) {
               slot.isBooked ? "cursor-not-allowed bg-destructive/80 hover:bg-destructive text-destructive-foreground" : 
                 isPastSlot ? "cursor-not-allowed bg-muted text-muted-foreground opacity-70" : 
                 "hover:bg-primary hover:text-primary-foreground hover:scale-105 focus:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2",
-              isClicked && !slot.isBooked && !isPastSlot && "animate-slot-pulse bg-green-400 dark:bg-green-600", // Use a distinct color for click feedback
+              isClicked && !slot.isBooked && !isPastSlot && "animate-slot-pulse bg-green-400 dark:bg-green-600",
               "flex flex-col items-center justify-center p-1"
             )}
             onClick={handleClick}
-            disabled={slot.isBooked || isPastSlot}
-            aria-label={slot.isBooked ? `Slot ${slot.startTime} - ${slot.endTime} booked by ${slot.bookedByName || slot.bookedBy}` : `Book slot ${slot.startTime} - ${slot.endTime}`}
+            // Dialog handles enabling/disabling based on actual booking logic now
+            // disabled={slot.isBooked || isPastSlot} 
+            aria-label={tooltipMessage}
           >
             <span className="font-medium">{slot.startTime}</span>
             <span className="text-xs opacity-80">- {slot.endTime}</span>
-            {slot.isBooked && <Lock className="h-3 w-3 mt-0.5" />}
+            {slot.isBooked && (slot.isGroupBooking ? <Users className="h-3 w-3 mt-0.5" /> : <Lock className="h-3 w-3 mt-0.5" />)}
           </Button>
         </TooltipTrigger>
-        {slot.isBooked && slot.bookedByName && (
-           <TooltipContent side="bottom">
-            <p className="flex items-center gap-1"><UserCheck size={14} /> Booked by: {slot.bookedByName}</p>
-          </TooltipContent>
-        )}
-        {isPastSlot && !slot.isBooked && (
-           <TooltipContent side="bottom">
-            <p>This time slot has passed.</p>
-          </TooltipContent>
-        )}
+        <TooltipContent side="bottom">
+          <p className="flex items-center gap-1">
+            {slot.isBooked ? (slot.isGroupBooking ? <Users size={14}/> : <UserCheck size={14} />) : null}
+            {tooltipMessage}
+          </p>
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
