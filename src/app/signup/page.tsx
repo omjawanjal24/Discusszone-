@@ -20,7 +20,7 @@ export default function SignupPage() {
   const [showOtpForm, setShowOtpForm] = useState(false);
   const [signupData, setSignupData] = useState<SignupFormValues | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // Removed isOtpReadOnly state
+  // Note: isOtpReadOnly state was previously here and has been removed.
   const { signup } = useAuth();
   const { toast } = useToast();
 
@@ -48,7 +48,6 @@ export default function SignupPage() {
     console.log('Simulating OTP sent to:', data.email);
     setSignupData(data);
     setShowOtpForm(true);
-    // Removed setIsOtpReadOnly(true)
     setIsLoading(false);
     toast({
       title: "OTP Sent",
@@ -114,7 +113,6 @@ export default function SignupPage() {
                           {...field}
                           maxLength={6}
                           pattern="\d{6}"
-                          // Removed readOnly and onFocus attributes
                         />
                       </FormControl>
                       <FormMessage />
@@ -126,7 +124,7 @@ export default function SignupPage() {
                 </Button>
               </form>
             </Form>
-            <Button variant="link" onClick={() => { setShowOtpForm(false); /* Removed setIsOtpReadOnly(true) */ }} className="mt-4 w-full">
+            <Button variant="link" onClick={() => { setShowOtpForm(false); }} className="mt-4 w-full">
               Back to Signup
             </Button>
           </CardContent>
@@ -256,4 +254,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
