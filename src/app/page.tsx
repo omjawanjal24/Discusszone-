@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+import Image from 'next/image'; // Keep for other images, but we'll use <img> for the problem one
 import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react'; 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -31,7 +31,7 @@ const ParallaxSection = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // handleScroll(); // Temporarily commented out initial call for debugging
+    // handleScroll(); // Initial call for parallax effect
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -98,7 +98,7 @@ const teamMembers = [
 export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
-      <section className="w-full py-12 md:py-24 lg:py-32 text-center relative"> {/* Removed overflow-hidden from here */}
+      <section className="w-full py-12 md:py-24 lg:py-32 text-center relative">
         <div 
           className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full filter blur-2xl -z-10"
         />
@@ -134,14 +134,13 @@ export default function HomePage() {
       </section>
 
       <section className="w-full max-w-5xl mx-auto">
-        <Image 
+        {/* Using standard <img> tag for troubleshooting */}
+        <img 
           src="https://mitwpu.edu.in/uploads/images/library_5.webp" 
           alt="Students collaborating in a discussion room at MITWPU library" 
-          width={1200} 
-          height={600} 
+          width="1200" 
+          height="600" 
           className="block border-4 border-red-500" // Simplified classes, added prominent border
-          data-ai-hint="university library" 
-          priority
         />
       </section>
       
@@ -219,5 +218,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
