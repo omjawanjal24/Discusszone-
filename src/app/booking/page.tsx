@@ -12,43 +12,11 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, subDays, isEqual, startOfDay, isToday } from 'date-fns';
 import { GroupBookingDialog } from '@/components/booking/GroupBookingDialog';
 
+// Temporarily simplified to help diagnose compilation/loading issues.
 const generateTimeSlots = (date: Date): TimeSlot[] => {
-  const slots: TimeSlot[] = [];
-  const openingHour = 9; // 9 AM
-  const closingHour = 18; // 6 PM (last slot ends at 6 PM)
-
-  // 1. If the booking 'date' is not today, no slots.
-  if (!isToday(date)) {
-    return [];
-  }
-
-  // 2. It IS today. Check if we're past closing time.
-  const now = new Date();
-  if (now.getHours() >= closingHour) {
-    return []; // Today, but past closing time. No slots.
-  }
-
-  // 3. It IS today and NOT past closing time.
-  // Generate slots from openingHour up to (but not including) closingHour.
-  // This will correctly generate future slots if it's currently before openingHour (e.g., 8 AM).
-  for (let hour = openingHour; hour < closingHour; hour++) {
-    // Ensure slots are based on the start of the provided 'date'
-    const slotDateBase = startOfDay(date); 
-    
-    const startTime = new Date(slotDateBase);
-    startTime.setHours(hour, 0, 0, 0);
-
-    const endTime = new Date(slotDateBase);
-    endTime.setHours(hour + 1, 0, 0, 0);
-    
-    slots.push({
-      id: `${format(startTime, 'HHmm')}`,
-      startTime: format(startTime, 'HH:mm'),
-      endTime: format(endTime, 'HH:mm'),
-      isBooked: false,
-    });
-  }
-  return slots;
+  // console.log("Using simplified generateTimeSlots for date:", date);
+  // This version will always return no slots, allowing us to test if the page compiles.
+  return []; 
 };
 
 const initialRoomsData = (date: Date): Room[] => [
@@ -63,7 +31,7 @@ export default function BookingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState<Date>(startOfDay(new Date()));
-  const [rooms, setRooms] = useState<Room[]>([]); // Initialize with empty array
+  const [rooms, setRooms] = useState<Room[]>([]); 
   const [isLoading, setIsLoading] = useState(true); 
   
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
