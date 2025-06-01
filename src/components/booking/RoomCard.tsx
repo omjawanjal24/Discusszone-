@@ -6,6 +6,7 @@ import type { Room } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TimeSlotButton } from './TimeSlotButton';
 import { Users } from 'lucide-react';
+import { RoomLayoutVisual } from './RoomLayoutVisual';
 
 interface RoomCardProps {
   room: Room;
@@ -22,7 +23,8 @@ const RoomCardComponent = ({ room, onBookSlot, currentTime }: RoomCardProps) => 
           <Users className="h-4 w-4 mr-1.5" /> Capacity: {room.capacity} seats
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow flex flex-col">
+        <RoomLayoutVisual />
         {room.slots.length === 0 ? (
           <p className="text-muted-foreground text-center py-4">No slots available for this room today.</p>
         ) : (
