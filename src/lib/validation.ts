@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const signupSchema = z.object({
@@ -31,8 +32,9 @@ export const forgotPasswordSchema = z.object({
 
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-export const otpSchema = z.object({
-  otp: z.string().length(6, { message: "OTP must be 6 digits" }).regex(/^\d+$/, { message: "OTP must contain only digits" }),
-});
+// OTP related schema and types are no longer needed.
+// export const otpSchema = z.object({
+//   otp: z.string().length(6, { message: "OTP must be 6 digits" }).regex(/^\d+$/, { message: "OTP must contain only digits" }),
+// });
 
-export type OtpFormValues = z.infer<typeof otpSchema>;
+// export type OtpFormValues = z.infer<typeof otpSchema>;
