@@ -2,12 +2,12 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import type { Room, TimeSlot } from '@/types';
+import type { Room, TimeSlot, UserBooking } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TimeSlotButton } from './TimeSlotButton';
 import { Users } from 'lucide-react';
 import { RoomLayoutVisual } from './RoomLayoutVisual';
-import { parse, isWithinInterval } from 'date-fns';
+import { parse, isWithinInterval, format, compareAsc } from 'date-fns';
 
 interface RoomCardProps {
   room: Room;
@@ -15,27 +15,60 @@ interface RoomCardProps {
   currentTime: Date;
 }
 
+// Helper function to format time for display (consistent with other parts of the app)
+const formatTime = (time24: string): string => {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes);
+  return format(date, 'hh:mm a');
+};
+
+// Helper function to count total bookings for a user PRN from localStorage
+const countUserTotalBookings = (userPrn?: string): number => {
+  if (!userPrn) return 0;
+  let count = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('discussZoneBookings-')) {
+        const storedData = localStorage.getItem(key);
+        if (storedData) {
+          const roomsForDate = JSON.parse(storedData) as Room[];
+          roomsForDate.forEach(roomOnDate => {
+            roomOnDate.slots.forEach(slot => {
+              if (slot.isBooked && slot.bookedBy === userPrn) {
+                count++;
+              }
+            });
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error counting user bookings from localStorage:", error);
+  }
+  return count;
+};
+
+
 const RoomCardComponent = ({ room, onBookSlot, currentTime }: RoomCardProps) => {
 
-  // Determine the occupants to display in RoomLayoutVisual
-  const displayOccupants = useMemo(() => {
+  const visualOccupancyDetails = useMemo(() => {
     let activeBookedSlot: TimeSlot | undefined = undefined;
     let nextUpcomingBookedSlot: TimeSlot | undefined = undefined;
     
-    const today = currentTime; // Base date for parsing slot times
+    const today = currentTime;
 
     for (const slot of room.slots) {
       if (slot.isBooked) {
         const startTimeToday = parse(slot.startTime, 'HH:mm', today);
         const endTimeToday = parse(slot.endTime, 'HH:mm', today);
 
-        // Check if current time is within this slot's interval
         if (isWithinInterval(currentTime, { start: startTimeToday, end: endTimeToday })) {
           activeBookedSlot = slot;
-          break; // Found an active slot, prioritize this
+          break; 
         }
 
-        // If slot is in the future and is the earliest one found so far
         if (startTimeToday > currentTime) {
           if (!nextUpcomingBookedSlot || startTimeToday < parse(nextUpcomingBookedSlot.startTime, 'HH:mm', today)) {
             nextUpcomingBookedSlot = slot;
@@ -45,7 +78,19 @@ const RoomCardComponent = ({ room, onBookSlot, currentTime }: RoomCardProps) => 
     }
     
     const targetSlot = activeBookedSlot || nextUpcomingBookedSlot;
-    return targetSlot?.occupants;
+
+    if (targetSlot) {
+      const totalBookings = countUserTotalBookings(targetSlot.bookedBy);
+      return {
+        occupants: targetSlot.occupants,
+        visualizedSlotStartTime: formatTime(targetSlot.startTime),
+        visualizedSlotEndTime: formatTime(targetSlot.endTime),
+        mainBookerNameForSlot: targetSlot.bookedByName || targetSlot.bookedBy || "Unknown Booker",
+        totalBookingsForMainBooker: totalBookings,
+      };
+    }
+
+    return { occupants: undefined }; // Default if no relevant slot
 
   }, [room.slots, currentTime]);
 
@@ -58,7 +103,14 @@ const RoomCardComponent = ({ room, onBookSlot, currentTime }: RoomCardProps) => 
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col">
-        <RoomLayoutVisual occupiedSeatsData={displayOccupants} roomCapacity={room.capacity} />
+        <RoomLayoutVisual 
+          occupiedSeatsData={visualOccupancyDetails.occupants} 
+          roomCapacity={room.capacity}
+          visualizedSlotStartTime={visualOccupancyDetails.visualizedSlotStartTime}
+          visualizedSlotEndTime={visualOccupancyDetails.visualizedSlotEndTime}
+          mainBookerNameForSlot={visualOccupancyDetails.mainBookerNameForSlot}
+          totalBookingsForMainBooker={visualOccupancyDetails.totalBookingsForMainBooker}
+        />
         {room.slots.length === 0 ? (
           <p className="text-muted-foreground text-center py-4">No slots available for this room today.</p>
         ) : (

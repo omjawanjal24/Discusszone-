@@ -12,11 +12,14 @@ interface OccupantData {
 
 interface RoomLayoutVisualProps {
   occupiedSeatsData?: OccupantData[];
-  roomCapacity: number; // For context, though visual is fixed for now
+  roomCapacity: number;
+  visualizedSlotStartTime?: string;
+  visualizedSlotEndTime?: string;
+  mainBookerNameForSlot?: string;
+  totalBookingsForMainBooker?: number;
 }
 
 // Define seat configurations (ID for mapping, style for positioning)
-// These IDs must be used consistently when assigning occupants.
 const seatConfigurations = [
   { id: 'S1', style: { top: '12%', left: '22.5%', transform: 'translateX(-50%)' } },
   { id: 'S2', style: { top: '12%', left: '37.5%', transform: 'translateX(-50%)' } },
@@ -30,7 +33,14 @@ const seatConfigurations = [
   { id: 'S10', style: { top: '50%', right: '8%', transform: 'translateY(-50%)' } },
 ];
 
-export const RoomLayoutVisual: React.FC<RoomLayoutVisualProps> = ({ occupiedSeatsData = [], roomCapacity }) => {
+export const RoomLayoutVisual: React.FC<RoomLayoutVisualProps> = ({ 
+  occupiedSeatsData = [], 
+  roomCapacity,
+  visualizedSlotStartTime,
+  visualizedSlotEndTime,
+  mainBookerNameForSlot,
+  totalBookingsForMainBooker 
+}) => {
   return (
     <div
       className="relative w-full aspect-video bg-lime-200 dark:bg-lime-800/60 p-2 sm:p-4 rounded-lg shadow-lg my-4"
@@ -44,21 +54,22 @@ export const RoomLayoutVisual: React.FC<RoomLayoutVisualProps> = ({ occupiedSeat
       />
 
       {/* Chairs - Rendered dynamically */}
-      {seatConfigurations.map((seatConfig, index) => {
-        // Only render chairs up to the visual limit, or room capacity if it's less than visual limit for more accuracy.
-        // However, the visual is fixed at 10 chairs. If capacity is 8, we show 10 chairs, 8 of which can be occupied.
-        // If capacity is 12, we show 10 chairs, all 10 can be occupied, and it implies 2 more are not visually shown.
-        // For simplicity, we render all 10 visual chairs.
+      {seatConfigurations.map((seatConfig) => {
+        const occupantInThisSeat = occupiedSeatsData.find(occ => occ.seatId === seatConfig.id);
+        const isOccupied = !!occupantInThisSeat;
         
-        const occupant = occupiedSeatsData.find(occ => occ.seatId === seatConfig.id);
         return (
           <Chair
             key={seatConfig.id}
             seatId={seatConfig.id}
             style={seatConfig.style}
-            isOccupied={!!occupant}
-            occupantName={occupant?.name}
-            isBooker={occupant?.isBooker}
+            isOccupied={isOccupied}
+            occupantName={occupantInThisSeat?.name}
+            isThisOccupantTheBooker={occupantInThisSeat?.isBooker}
+            slotStartTime={visualizedSlotStartTime}
+            slotEndTime={visualizedSlotEndTime}
+            mainBookerNameForSlot={mainBookerNameForSlot}
+            totalBookingsForMainBooker={totalBookingsForMainBooker}
           />
         );
       })}
@@ -66,5 +77,4 @@ export const RoomLayoutVisual: React.FC<RoomLayoutVisualProps> = ({ occupiedSeat
   );
 };
 
-// Expose seat IDs for booking logic if needed elsewhere, though better to keep it encapsulated or pass as prop.
 export const VISUAL_SEAT_IDS = seatConfigurations.map(s => s.id);
