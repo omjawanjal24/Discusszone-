@@ -31,7 +31,7 @@ const ParallaxSection = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // handleScroll(); // Initial call for parallax effect
+    // handleScroll(); // Initial call for parallax effect - commented out during previous debug
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -149,7 +149,7 @@ export default function HomePage() {
                 alt="Knowledge Resource Center Interior"
                 width={600}
                 height={450}
-                className="rounded-lg shadow-xl object-cover"
+                className="rounded-lg shadow-xl border-4 border-red-500"
                 data-ai-hint="library interior"
               />
             </div>
