@@ -17,17 +17,14 @@ const generateTimeSlots = (date: Date): TimeSlot[] => {
   const openingHour = 9; // 9 AM
   const closingHour = 18; // 6 PM (last slot ends at 6 PM)
 
-  // Only generate slots for today if it's within booking hours, otherwise no slots for today.
-  // This logic is simplified; in a real app, you might check if current time is past closingHour.
   if (!isToday(date)) {
     return [];
   }
 
-  const now = new Date();
-  if (now.getHours() >= closingHour && isToday(date)) { // If past closing hour for today
+  const now = new Date(); // Current actual time to check against closing hour for today
+  if (now.getHours() >= closingHour && isToday(date)) { 
     return [];
   }
-
 
   for (let hour = openingHour; hour < closingHour; hour++) {
     const startTime = new Date(date);
@@ -58,8 +55,8 @@ export default function BookingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState<Date>(startOfDay(new Date()));
-  const [rooms, setRooms] = useState<Room[]>(() => initialRoomsData(currentDate)); // Initialize rooms with current date
-  const [isLoading, setIsLoading] = useState(true); // For initial load indication
+  const [rooms, setRooms] = useState<Room[]>([]); // Initialize with empty array
+  const [isLoading, setIsLoading] = useState(true); 
   
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<{ room: Room; slot: TimeSlot } | null>(null);
@@ -69,15 +66,18 @@ export default function BookingPage() {
   useEffect(() => {
     const timerId = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    }, 60000); 
     return () => clearInterval(timerId);
   }, []);
 
   useEffect(() => {
-    // This effect handles initial data loading and re-loading if currentDate changes.
-    // For now, currentDate change is disabled, so it's mainly for initial load.
     setIsLoading(true);
-    setRooms(initialRoomsData(currentDate));
+    if (currentDate instanceof Date && !isNaN(currentDate.getTime())) {
+      setRooms(initialRoomsData(currentDate));
+    } else {
+      console.error("currentDate is invalid in BookingPage useEffect");
+      setRooms([]);
+    }
     setIsLoading(false);
   }, [currentDate]);
 
@@ -95,11 +95,12 @@ export default function BookingPage() {
     const slot = room?.slots.find(s => s.id === slotId);
 
     if (room && slot) {
-      // Check if slot is past
       const slotEndTimeParts = slot.endTime.split(':');
-      const slotEndDate = new Date(currentDate); // Ensure using the selected date for comparison
+      const slotEndDate = new Date(currentDate); 
       slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
-      if (slotEndDate < new Date() && isToday(currentDate)) { // Check if slot is past only for today
+      
+      // Use `currentTime` state variable for consistent past slot check
+      if (slotEndDate < currentTime && isToday(currentDate)) { 
         toast({ title: "Slot Unavailable", description: "This time slot has passed.", variant: "warning" });
         return;
       }
@@ -111,7 +112,7 @@ export default function BookingPage() {
       setSelectedBookingDetails({ room, slot });
       setIsBookingDialogOpen(true);
     }
-  }, [user, toast, currentDate, rooms, currentTime]); // Added currentTime to deps as logic inside uses it via new Date()
+  }, [user, toast, currentDate, rooms, currentTime]); 
 
   const handleConfirmBooking = useCallback((roomId: string, slotId: string, groupMembers: GroupMember[], agreedToTerms: boolean) => {
     if (!user) {
@@ -164,7 +165,7 @@ export default function BookingPage() {
     );
     setIsBookingDialogOpen(false);
     setSelectedBookingDetails(null);
-  }, [user, toast]);
+  }, [user, toast]); // `setRooms` is stable, so not strictly needed in deps if user and toast are the only external values used directly.
   
   return (
     <AuthGuard>
