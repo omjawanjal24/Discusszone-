@@ -15,10 +15,10 @@ const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
   projectId: "cogent-dragon-460015-a8",
-  storageBucket: "cogent-dragon-460015-a8.appspot.com", // Standard format. If your console shows .firebasestorage.app, that's unusual but should be used if verified.
+  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app",
   messagingSenderId: "923402381047",
   appId: "1:923402381047:web:bb3bdb9b9182876dbc95f2",
-  measurementId: "G-S5EM2Q9XLQ" // Optional for base SDK, but good to have if using Analytics
+  measurementId: "G-S5EM2Q9XLQ"
 };
 
 // --- Diagnostic Logging & Placeholder Checks ---
@@ -39,6 +39,7 @@ for (const key of essentialKeys) {
 }
 
 // Specific check if the default template project ID and API key are still being used for "cogent-dragon-460015-a8".
+// This is a general template check, adjust if your actual projectId is different but you want similar warnings for default-looking keys.
 if (firebaseConfig.projectId === "cogent-dragon-460015-a8" && firebaseConfig.apiKey === "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc") {
     const defaultWarning = `FirebaseConfig.ts: WARNING - The Firebase configuration appears to be using the default template values for projectId AND apiKey for project 'cogent-dragon-460015-a8'.
     If these are NOT your actual credentials for an active project named 'cogent-dragon-460015-a8',
@@ -84,8 +85,6 @@ if (hasPlaceholders) {
     // Initialize Analytics if in a browser environment
     if (typeof window !== 'undefined') {
         try {
-            // Check if analytics was already initialized if getApps().length > 0, though initializeApp should handle this.
-            // For safety, just get/initialize it.
             analytics = getAnalytics(app);
             console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
         } catch (analyticsError: any) {
@@ -149,7 +148,6 @@ Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
 
     if (typeof window !== "undefined") {
       const preStyle = "font-family: monospace; white-space: pre-wrap; padding: 10px; background-color: #fff0f0; border: 1px solid red; color: red;";
-      // Use the corrected regex for replacing <br> tags for console display
       console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle);
       alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\n...(see console for full details)" : ""));
     }
