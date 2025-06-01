@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+import Image from 'next/image'; // Keep for KRC image for now, will be standard img tag in code
 import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -88,7 +88,7 @@ const teamMembers = [
   {
     name: "Kalyani Ghokle",
     role: "Asst. Librarian",
-    imageUrl: "https://placehold.co/150x150.png", // This one is still a placeholder
+    imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: null,
     avatarHint: "KG",
   },
@@ -99,16 +99,12 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32 text-center relative">
-        {/* Background Image and Overlay Container */}
         <div
           className="absolute inset-0 bg-cover bg-center z-0"
           style={{ backgroundImage: "url('https://mitwpu.edu.in/uploads/images/library_5.webp')" }}
         >
-          {/* Overlay */}
           <div className="absolute inset-0 bg-black opacity-60"></div>
         </div>
-
-        {/* Content Container */}
         <div className="container px-4 md:px-6 relative z-10">
           <h1
             className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl mb-6 text-white"
@@ -144,6 +140,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <div className="lg:w-1/2">
+              {/* Standard img tag for KRC image for troubleshooting */}
               <img
                 src="https://mitwpu.edu.in/uploads/images/library_6.webp"
                 alt="Knowledge Resource Center Interior"
@@ -188,14 +185,25 @@ export default function HomePage() {
             {teamMembers.map((member) => (
               <div key={member.name} className="flex flex-col items-center text-center">
                 <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg">
-                  <AvatarImage 
-                    key={member.imageUrl} /* Added key here */
-                    src={member.imageUrl} 
-                    alt={member.name} 
-                    data-ai-hint="profile photo"
-                    className="aspect-square h-full w-full" 
-                  />
-                  <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
+                  {member.name === "OM Jawanjal" ? (
+                    <img 
+                      src={member.imageUrl} 
+                      alt={member.name} 
+                      className="aspect-square h-full w-full rounded-full object-cover"
+                      style={{ border: '2px solid red' }} // Added red border for troubleshooting this specific img tag
+                    />
+                  ) : (
+                    <>
+                      <AvatarImage 
+                        key={member.imageUrl} 
+                        src={member.imageUrl} 
+                        alt={member.name} 
+                        data-ai-hint="profile photo"
+                        className="aspect-square h-full w-full" 
+                      />
+                      <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
+                    </>
+                  )}
                 </Avatar>
                 {member.linkedinUrl ? (
                   <a
@@ -218,3 +226,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
