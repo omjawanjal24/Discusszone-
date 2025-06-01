@@ -179,5 +179,4 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
 }
 
 export { app, auth, db, analytics, Timestamp };
-
     
