@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, CalendarCheck2 } from 'lucide-react'; // Added CalendarCheck2 for My Bookings
+import { User, LogOut, CalendarCheck2, Shield } from 'lucide-react';
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -66,6 +66,12 @@ export function Navbar() {
                   <CalendarCheck2 className="mr-2 h-4 w-4" />
                   <span>My Bookings</span>
                 </DropdownMenuItem>
+                {user.isAdmin && (
+                  <DropdownMenuItem onClick={() => router.push('/admin')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    <span>Admin Panel</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />

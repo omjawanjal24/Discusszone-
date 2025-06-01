@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -33,21 +34,19 @@ export default function LoginPage() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Mock authentication:
-    // In a real app, you'd validate credentials against a backend.
-    // For demo, we'll check for a specific mock user or just log in.
-    // Let's assume any valid MITWPU email + any password logs in for demo.
     if (data.email.endsWith('@mitwpu.edu.in') || data.email.endsWith('@mitwpu.ac.in') || data.email.endsWith('@mituniversity.edu.in')) {
+      const isAdmin = data.email === 'admin@mitwpu.edu.in'; // Simulate admin user
       const mockUser: User = {
         email: data.email,
-        // These would come from backend in real app
-        prn: '0000000000', 
+        prn: isAdmin ? 'ADMIN00000' : '0000000000', 
         gender: 'other',
-        role: 'student',
+        role: isAdmin ? 'faculty' : 'student', // Admins might be faculty
+        isAdmin: isAdmin,
       };
       login(mockUser);
       toast({
         title: "Login Successful!",
-        description: `Welcome back, ${data.email}`,
+        description: `Welcome back, ${data.email}${isAdmin ? ' (Admin)' : ''}`,
       });
     } else {
       form.setError("email", { type: "manual", message: "Invalid email or password." });

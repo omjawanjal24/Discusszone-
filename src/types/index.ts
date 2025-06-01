@@ -7,6 +7,7 @@ export interface User {
   role: 'student' | 'faculty';
   password?: string; // Should not be stored in frontend state long-term if real auth
   avatarUrl?: string;
+  isAdmin?: boolean; // Added for admin role
 }
 
 export interface GroupMember {
@@ -45,4 +46,11 @@ export interface UserBooking {
   groupMembers?: GroupMember[];
   occupants?: Array<{ seatId: string; name: string; isBooker: boolean }>;
   bookedByName?: string;
+}
+
+// For Admin Panel - Manage Bookings
+export interface AdminBookingView extends UserBooking {
+  originalSlotId: string; // To help locate the slot for cancellation
+  originalRoomId: string; // To help locate the room for cancellation
+  originalDate: string; // Date in YYYY-MM-DD format for localStorage key
 }
