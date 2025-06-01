@@ -67,21 +67,21 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "/images/om-jawanjal.png", // Updated to local path
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "/images/subhajit-dolai.png", // Updated to local path
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "/images/praveenkumar-vaidya.png", // Updated to local path
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
@@ -183,17 +183,14 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             {teamMembers.map((member) => (
               <div key={member.name} className="flex flex-col items-center text-center">
-                <Avatar 
-                  className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg"
-                  style={member.name === "OM Jawanjal" ? { border: "4px solid red"} : {}}
-                >
+                <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg">
                   <AvatarImage
                     key={member.imageUrl} 
                     src={member.imageUrl}
                     alt={member.name}
                     width={150}
                     height={150}
-                    data-ai-hint={member.imageUrl.startsWith('/images/') ? "profile avatar" : "placeholder avatar"}
+                    data-ai-hint="placeholder avatar"
                   />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
@@ -218,6 +215,3 @@ export default function HomePage() {
     </div>
   );
 }
-    
-
-    
