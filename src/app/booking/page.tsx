@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { RoomCard } from '@/components/booking/RoomCard';
 import type { Room, TimeSlot, GroupMember } from '@/types';
@@ -17,9 +17,17 @@ const generateTimeSlots = (date: Date): TimeSlot[] => {
   const openingHour = 9; // 9 AM
   const closingHour = 18; // 6 PM (last slot ends at 6 PM)
 
+  // Only generate slots for today if it's within booking hours, otherwise no slots for today.
+  // This logic is simplified; in a real app, you might check if current time is past closingHour.
   if (!isToday(date)) {
     return [];
   }
+
+  const now = new Date();
+  if (now.getHours() >= closingHour && isToday(date)) { // If past closing hour for today
+    return [];
+  }
+
 
   for (let hour = openingHour; hour < closingHour; hour++) {
     const startTime = new Date(date);
@@ -50,19 +58,30 @@ export default function BookingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState<Date>(startOfDay(new Date()));
-  const [rooms, setRooms] = useState<Room[]>(initialRoomsData(currentDate));
-  const [isLoading, setIsLoading] = useState(true);
+  const [rooms, setRooms] = useState<Room[]>(() => initialRoomsData(currentDate)); // Initialize rooms with current date
+  const [isLoading, setIsLoading] = useState(true); // For initial load indication
   
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<{ room: Room; slot: TimeSlot } | null>(null);
 
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   useEffect(() => {
+    const timerId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+    return () => clearInterval(timerId);
+  }, []);
+
+  useEffect(() => {
+    // This effect handles initial data loading and re-loading if currentDate changes.
+    // For now, currentDate change is disabled, so it's mainly for initial load.
     setIsLoading(true);
     setRooms(initialRoomsData(currentDate));
     setIsLoading(false);
   }, [currentDate]);
 
-  const handleOpenBookingDialog = (roomId: string, slotId: string) => {
+  const handleOpenBookingDialog = useCallback((roomId: string, slotId: string) => {
     if (!user) {
       toast({ title: "Authentication Error", description: "You must be logged in to book a slot.", variant: "destructive" });
       return;
@@ -76,6 +95,15 @@ export default function BookingPage() {
     const slot = room?.slots.find(s => s.id === slotId);
 
     if (room && slot) {
+      // Check if slot is past
+      const slotEndTimeParts = slot.endTime.split(':');
+      const slotEndDate = new Date(currentDate); // Ensure using the selected date for comparison
+      slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
+      if (slotEndDate < new Date() && isToday(currentDate)) { // Check if slot is past only for today
+        toast({ title: "Slot Unavailable", description: "This time slot has passed.", variant: "warning" });
+        return;
+      }
+
       if (slot.isBooked) {
          toast({ title: "Slot Unavailable", description: "This slot is already booked.", variant: "destructive" });
          return;
@@ -83,9 +111,9 @@ export default function BookingPage() {
       setSelectedBookingDetails({ room, slot });
       setIsBookingDialogOpen(true);
     }
-  };
+  }, [user, toast, currentDate, rooms, currentTime]); // Added currentTime to deps as logic inside uses it via new Date()
 
-  const handleConfirmBooking = (roomId: string, slotId: string, groupMembers: GroupMember[], agreedToTerms: boolean) => {
+  const handleConfirmBooking = useCallback((roomId: string, slotId: string, groupMembers: GroupMember[], agreedToTerms: boolean) => {
     if (!user) {
       toast({ title: "Authentication Error", description: "You must be logged in to book a slot.", variant: "destructive" });
       return;
@@ -98,11 +126,10 @@ export default function BookingPage() {
     setRooms(prevRooms =>
       prevRooms.map(room => {
         if (room.id === roomId) {
-          // Check capacity again just in case
-          const totalPeople = 1 + groupMembers.length; // Booker + group members
+          const totalPeople = 1 + groupMembers.length; 
           if (totalPeople > room.capacity) {
             toast({ title: "Capacity Exceeded", description: `The room capacity (${room.capacity}) would be exceeded with ${totalPeople} people.`, variant: "destructive" });
-            return room; // Do not update
+            return room; 
           }
 
           return {
@@ -110,7 +137,6 @@ export default function BookingPage() {
             slots: room.slots.map(slot => {
               if (slot.id === slotId) {
                 if (slot.isBooked) {
-                  // This check is a safeguard, dialog shouldn't open for booked slots.
                   toast({ title: "Slot Unavailable", description: "This slot was booked by someone else.", variant: "destructive" });
                   return slot;
                 }
@@ -124,7 +150,7 @@ export default function BookingPage() {
                   ...slot, 
                   isBooked: true, 
                   bookedBy: user.prn, 
-                  bookedByName: user.email, // Using email as name for simplicity
+                  bookedByName: user.email, 
                   isGroupBooking,
                   groupMembers: isGroupBooking ? groupMembers : undefined,
                 };
@@ -138,7 +164,7 @@ export default function BookingPage() {
     );
     setIsBookingDialogOpen(false);
     setSelectedBookingDetails(null);
-  };
+  }, [user, toast]);
   
   return (
     <AuthGuard>
@@ -149,7 +175,7 @@ export default function BookingPage() {
             Select an available time slot for {format(currentDate, 'eeee, MMMM do, yyyy')}.
           </p>
           <p className="text-sm text-primary mt-1">
-            Bookings are only available for the current day.
+            Bookings are only available for the current day. (9 AM - 6 PM)
           </p>
         </div>
 
@@ -179,7 +205,12 @@ export default function BookingPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {rooms.map(room => (
-              <RoomCard key={room.id} room={room} onBookSlot={handleOpenBookingDialog} />
+              <RoomCard 
+                key={room.id} 
+                room={room} 
+                onBookSlot={handleOpenBookingDialog} 
+                currentTime={currentTime}
+              />
             ))}
           </div>
         )}

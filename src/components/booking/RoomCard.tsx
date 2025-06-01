@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react';
 import type { Room } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TimeSlotButton } from './TimeSlotButton';
@@ -9,9 +10,10 @@ import { Users } from 'lucide-react';
 interface RoomCardProps {
   room: Room;
   onBookSlot: (roomId: string, slotId: string) => void;
+  currentTime: Date;
 }
 
-export function RoomCard({ room, onBookSlot }: RoomCardProps) {
+const RoomCardComponent = ({ room, onBookSlot, currentTime }: RoomCardProps) => {
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
       <CardHeader>
@@ -29,7 +31,9 @@ export function RoomCard({ room, onBookSlot }: RoomCardProps) {
               <TimeSlotButton
                 key={slot.id}
                 slot={slot}
-                onClick={() => onBookSlot(room.id, slot.id)}
+                roomId={room.id}
+                onBookSlot={onBookSlot}
+                currentTime={currentTime}
               />
             ))}
           </div>
@@ -38,3 +42,5 @@ export function RoomCard({ room, onBookSlot }: RoomCardProps) {
     </Card>
   );
 }
+
+export const RoomCard = React.memo(RoomCardComponent);

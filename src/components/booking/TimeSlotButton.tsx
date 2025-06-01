@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { TimeSlot } from '@/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,39 +12,53 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { isToday, startOfDay } from 'date-fns';
 
 interface TimeSlotButtonProps {
   slot: TimeSlot;
-  onClick: () => void;
+  roomId: string;
+  onBookSlot: (roomId: string, slotId: string) => void;
+  currentTime: Date; // Received from parent
 }
 
-export function TimeSlotButton({ slot, onClick }: TimeSlotButtonProps) {
+const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: TimeSlotButtonProps) => {
   const [isClicked, setIsClicked] = useState(false);
 
-  const handleClick = () => {
-    // The parent (BookingPage) now handles opening the dialog or showing "already booked" toast.
-    // The click on TimeSlotButton is primarily to signal intent to book this slot.
-    onClick();
+  // The parent (BookingPage) now handles opening the dialog or showing "already booked" toast.
+  // It also handles checking if the slot is past before opening the dialog.
+  const handleClick = useCallback(() => {
+    onBookSlot(roomId, slot.id);
     
+    // Visual feedback for available slots
     if (!slot.isBooked) {
-      setIsClicked(true);
-      // Visual feedback reset is handled by dialog closure or if booking fails.
-      // For simplicity, we can keep a short timeout here if dialog isn't always shown for every click.
-      setTimeout(() => setIsClicked(false), 1500); 
+      // Determine if slot is past, using the passed currentTime
+      const slotEndTimeParts = slot.endTime.split(':');
+      // Assuming slots are for 'today' relative to the booking page's currentDate
+      // For simplicity, we'll assume `currentTime` reflects the relevant day context.
+      // A more robust solution might involve passing `currentDate` from BookingPage as well.
+      const slotEndDate = new Date(currentTime); 
+      slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
+      
+      // Only apply pulse if not past
+      if (!(slotEndDate < currentTime && isToday(startOfDay(currentTime)))) {
+         setIsClicked(true);
+         setTimeout(() => setIsClicked(false), 1500); 
+      }
     }
-  };
-
-  const [currentTime, setCurrentTime] = useState(new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
+  }, [onBookSlot, roomId, slot.id, slot.isBooked, slot.endTime, currentTime]);
   
   const slotEndTimeParts = slot.endTime.split(':');
-  const slotEndDate = new Date();
+  // We need to know the date context for the slot to compare accurately.
+  // Assuming `currentTime`'s date part is the relevant date (e.g., from BookingPage's `currentDate`)
+  const slotDateContext = startOfDay(currentTime); 
+  const slotEndDate = new Date(slotDateContext);
   slotEndDate.setHours(parseInt(slotEndTimeParts[0]), parseInt(slotEndTimeParts[1]), 0, 0);
 
-  const isPastSlot = slotEndDate < currentTime;
+  // A slot is past if its end time is before the current time, but only if it's for today.
+  // This check assumes the slots are always for `isToday(slotDateContext)`.
+  // The parent component `BookingPage` handles whether slots are generated for non-today dates.
+  const isPastSlot = slotEndDate < currentTime && isToday(slotDateContext) ;
+
 
   let tooltipMessage = `Book slot ${slot.startTime} - ${slot.endTime}`;
   if (slot.isBooked) {
@@ -71,8 +85,7 @@ export function TimeSlotButton({ slot, onClick }: TimeSlotButtonProps) {
               "flex flex-col items-center justify-center p-1"
             )}
             onClick={handleClick}
-            // Dialog handles enabling/disabling based on actual booking logic now
-            // disabled={slot.isBooked || isPastSlot} 
+            disabled={slot.isBooked || isPastSlot} // Keep disabled for already booked or past slots
             aria-label={tooltipMessage}
           >
             <span className="font-medium">{slot.startTime}</span>
@@ -83,6 +96,7 @@ export function TimeSlotButton({ slot, onClick }: TimeSlotButtonProps) {
         <TooltipContent side="bottom">
           <p className="flex items-center gap-1">
             {slot.isBooked ? (slot.isGroupBooking ? <Users size={14}/> : <UserCheck size={14} />) : null}
+             {isPastSlot && !slot.isBooked ? <Lock size={14}/> : null}
             {tooltipMessage}
           </p>
         </TooltipContent>
@@ -90,3 +104,5 @@ export function TimeSlotButton({ slot, onClick }: TimeSlotButtonProps) {
     </TooltipProvider>
   );
 }
+
+export const TimeSlotButton = React.memo(TimeSlotButtonComponent);
