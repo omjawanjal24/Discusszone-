@@ -10,7 +10,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
   projectId: "cogent-dragon-460015-a8",
-  storageBucket: "cogent-dragon-460015-a8.appspot.com", // Ensure this matches your console, usually .appspot.com
+  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app",
   messagingSenderId: "923402381047",
   appId: "1:923402381047:web:bb3bdb9b9182876dbc95f2",
   measurementId: "G-S5EM2Q9XLQ"
