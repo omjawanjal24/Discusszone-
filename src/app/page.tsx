@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { CalendarCheck, Users, Clock, ShieldCheck, Library, Linkedin } from 'lucide-react';
+import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react'; 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ParallaxSection = () => {
@@ -18,11 +18,12 @@ const ParallaxSection = () => {
         const sectionTop = sectionRef.current.offsetTop;
         const sectionHeight = sectionRef.current.offsetHeight;
         
-        if (scrollY + window.innerHeight > sectionTop && scrollY < sectionTop + sectionHeight) {
+        if (sectionRef.current && scrollY + window.innerHeight > sectionTop && scrollY < sectionTop + sectionHeight) {
           const elements = sectionRef.current.querySelectorAll<HTMLElement>('[data-parallax-speed]');
           elements.forEach(el => {
             const speed = parseFloat(el.dataset.parallaxSpeed || "0.5");
-            const offset = (scrollY - sectionTop + window.innerHeight / 2) * speed * 0.1; 
+            const relativeScroll = scrollY - sectionTop + (window.innerHeight / 2) - (sectionHeight / 2);
+            const offset = relativeScroll * speed * 0.05; 
             el.style.transform = `translateY(${offset}px)`;
           });
         }
@@ -30,7 +31,7 @@ const ParallaxSection = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); 
+    // handleScroll(); // Temporarily commented out initial call for debugging
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -66,29 +67,29 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
-    avatarHint: "OM",
+    avatarHint: "OJ", 
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "https://placehold.co/150x150.png", 
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
   {
     name: "Kalyani Ghokle",
     role: "Asst. Librarian",
-    imageUrl: "https://placehold.co/150x150.png",
-    linkedinUrl: null, // No LinkedIn provided
+    imageUrl: "https://placehold.co/150x150.png", 
+    linkedinUrl: null, 
     avatarHint: "KG",
   },
 ];
@@ -97,7 +98,7 @@ const teamMembers = [
 export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
-      <section className="w-full py-12 md:py-24 lg:py-32 text-center relative overflow-hidden">
+      <section className="w-full py-12 md:py-24 lg:py-32 text-center relative"> {/* Removed overflow-hidden from here */}
         <div 
           className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full filter blur-2xl -z-10"
         />
@@ -138,7 +139,7 @@ export default function HomePage() {
           alt="Students collaborating in a discussion room at MITWPU library" 
           width={1200} 
           height={600} 
-          className="rounded-lg shadow-2xl" 
+          className="block border-4 border-red-500" // Simplified classes, added prominent border
           data-ai-hint="university library" 
           priority
         />
@@ -151,7 +152,7 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <div className="lg:w-1/2">
               <Image
-                src="https://placehold.co/600x450.png"
+                src="https://placehold.co/600x450.png" 
                 alt="Knowledge Resource Center"
                 width={600}
                 height={450}
