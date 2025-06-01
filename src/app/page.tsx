@@ -88,7 +88,7 @@ const teamMembers = [
   {
     name: "Kalyani Ghokle",
     role: "Asst. Librarian",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "https://placehold.co/150x150.png", // This one is still a placeholder
     linkedinUrl: null,
     avatarHint: "KG",
   },
@@ -144,13 +144,13 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <div className="lg:w-1/2">
-              {/* Replaced next/image with standard img tag for troubleshooting */}
               <img
                 src="https://mitwpu.edu.in/uploads/images/library_6.webp"
                 alt="Knowledge Resource Center Interior"
                 width={600}
                 height={450}
                 className="rounded-lg shadow-xl border-4 border-red-500"
+                data-ai-hint="library interior"
               />
             </div>
             <div className="lg:w-1/2 text-left">
@@ -188,7 +188,13 @@ export default function HomePage() {
             {teamMembers.map((member) => (
               <div key={member.name} className="flex flex-col items-center text-center">
                 <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg">
-                  <AvatarImage src={member.imageUrl} alt={member.name} data-ai-hint="profile photo" />
+                  <AvatarImage 
+                    key={member.imageUrl} /* Added key here */
+                    src={member.imageUrl} 
+                    alt={member.name} 
+                    data-ai-hint="profile photo"
+                    className="aspect-square h-full w-full" 
+                  />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
                 {member.linkedinUrl ? (
@@ -212,5 +218,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
