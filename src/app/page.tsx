@@ -4,8 +4,8 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image'; // Keep for other images, but we'll use <img> for the problem one
-import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react'; 
+import Image from 'next/image';
+import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ParallaxSection = () => {
@@ -23,7 +23,7 @@ const ParallaxSection = () => {
           elements.forEach(el => {
             const speed = parseFloat(el.dataset.parallaxSpeed || "0.5");
             const relativeScroll = scrollY - sectionTop + (window.innerHeight / 2) - (sectionHeight / 2);
-            const offset = relativeScroll * speed * 0.05; 
+            const offset = relativeScroll * speed * 0.05;
             el.style.transform = `translateY(${offset}px)`;
           });
         }
@@ -31,7 +31,7 @@ const ParallaxSection = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // handleScroll(); // Initial call for parallax effect
+    // handleScroll(); // Initial call for parallax effect - re-enabled as it was commented out in prior step
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -67,29 +67,29 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://placehold.co/150x150.png", 
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
-    avatarHint: "OJ", 
+    avatarHint: "OJ",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "https://placehold.co/150x150.png", 
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "https://placehold.co/150x150.png", 
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
   {
     name: "Kalyani Ghokle",
     role: "Asst. Librarian",
-    imageUrl: "https://placehold.co/150x150.png", 
-    linkedinUrl: null, 
+    imageUrl: "https://placehold.co/150x150.png",
+    linkedinUrl: null,
     avatarHint: "KG",
   },
 ];
@@ -99,33 +99,38 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32 text-center relative">
-        <div 
-          className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full filter blur-2xl -z-10"
-        />
-        <div 
-          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-accent/10 rounded-full filter blur-3xl -z-10"
-        />
-        
-        <div className="container px-4 md:px-6">
-          <h1 
-            className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl mb-6"
+        {/* Background Image and Overlay Container */}
+        <div
+          className="absolute inset-0 bg-cover bg-center z-0"
+          style={{ backgroundImage: "url('https://mitwpu.edu.in/uploads/images/library_5.webp')" }}
+        >
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black opacity-60"></div>
+        </div>
+
+        {/* Content Container */}
+        <div className="container px-4 md:px-6 relative z-10">
+          <h1
+            className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl mb-6 text-white"
           >
-            Welcome to <span className="text-primary dark:text-primary">DiscussZone</span>
+            Welcome to <span className="text-yellow-400">DiscussZone</span>
           </h1>
-          <p 
-            className="max-w-[700px] mx-auto text-muted-foreground md:text-xl mb-8"
+          <p
+            className="max-w-[700px] mx-auto text-gray-100 md:text-xl mb-8"
           >
             Your one-stop solution for booking discussion rooms at MITWPU.
             Plan your collaborative sessions efficiently.
           </p>
-          <div 
+          <div
             className="space-x-4"
           >
             <Link href="/booking" passHref>
-              <Button size="lg" className="font-semibold">Book a Room</Button>
+              <Button size="lg" className="font-semibold bg-yellow-500 hover:bg-yellow-600 text-black">
+                Book a Room
+              </Button>
             </Link>
             <Link href="/signup" passHref>
-              <Button size="lg" variant="outline" className="font-semibold">
+              <Button size="lg" variant="outline" className="font-semibold border-gray-200 text-gray-200 hover:bg-gray-200 hover:text-black">
                 Get Started
               </Button>
             </Link>
@@ -133,16 +138,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="w-full max-w-5xl mx-auto">
-        {/* Using standard <img> tag for troubleshooting */}
-        <img 
-          src="https://mitwpu.edu.in/uploads/images/library_5.webp" 
-          alt="Students collaborating in a discussion room at MITWPU library" 
-          width="1200" 
-          height="600" 
-          className="block border-4 border-red-500" // Simplified classes, added prominent border
-        />
-      </section>
+      {/* This section which previously held the standalone image is now removed. */}
       
       <ParallaxSection />
 
@@ -151,7 +147,7 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <div className="lg:w-1/2">
               <Image
-                src="https://placehold.co/600x450.png" 
+                src="https://placehold.co/600x450.png"
                 alt="Knowledge Resource Center"
                 width={600}
                 height={450}
@@ -218,3 +214,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
