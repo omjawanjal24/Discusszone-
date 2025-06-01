@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               avatarUrl: profileData.avatarUrl || firebaseUser.photoURL,
               createdAt: profileData.createdAt instanceof Timestamp ? profileData.createdAt.toDate() : profileData.createdAt,
             });
-            console.log("AuthContext: User profile loaded from Firestore for", firebaseUser.email);
+            console.log(`AuthContext: User profile for ${firebaseUser.email} loaded from Firestore. Served from cache: ${userDocSnap.metadata.fromCache}`);
           } else {
             console.warn("AuthContext: User profile not found in Firestore for UID:", firebaseUser.uid, " Email:", firebaseUser.email);
             toast({
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               isVerified: firebaseUser.emailVerified,
-              isAdmin: firebaseUser.email === ADMIN_EMAIL, // Basic admin check if profile fails
+              isAdmin: firebaseUser.email === ADMIN_EMAIL,
           };
           setUser(minimalUser);
           console.log("AuthContext: Fallback to minimal user data due to Firestore fetch error for:", firebaseUser.email, "Minimal data:", minimalUser);
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount and cleans up on unmount
 
   const login = useCallback(async (credentials: LoginFormValues) => {
     if (!auth) {
@@ -141,16 +141,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         gender: signupData.gender,
         role: signupData.role,
         isAdmin: signupData.email === ADMIN_EMAIL,
-        isVerified: firebaseUser.emailVerified,
-        avatarUrl: '',
+        isVerified: firebaseUser.emailVerified, // This will typically be false until email verification
+        avatarUrl: '', // Default or generated avatar URL
         createdAt: Timestamp.fromDate(new Date()),
       };
 
       await setDoc(doc(db, "users", firebaseUser.uid), userProfile);
       console.log("AuthContext: User profile created in Firestore for UID:", firebaseUser.uid);
-
+      
+      // User is now set via onAuthStateChanged
       toast({ title: "Signup Successful!", description: "Account created. You are now logged in."});
-      router.push('/booking');
+      router.push('/booking'); // Redirect to booking or dashboard page
 
     } catch (error: any) {
       console.error("Firebase signup error:", error);
@@ -178,6 +179,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       await signOut(auth);
+      // setUser(null) is handled by onAuthStateChanged
       router.push('/login');
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error: any) {
@@ -194,7 +196,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout,
       signup,
       loading,
-      isAuthenticated: !!user && !loading
+      isAuthenticated: !!user && !loading // More robust isAuthenticated check
     }}>
       {children}
     </AuthContext.Provider>
