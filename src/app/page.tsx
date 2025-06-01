@@ -67,21 +67,21 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://placehold.co/150x150.png", // Using placeholder for reliable testing
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "https://media.licdn.com/dms/image/v2/D4D03AQEtFjh7U8JtWg/profile-displayphoto-shrink_800_800/B4DZTRnWotHAAc-/0/1738683543453?e=1754524800&v=beta&t=_NTsoEUnSSBbFf3cOMbY1ckQbM5KuSFuwrPdaul1Gvw",
+    imageUrl: "https://placehold.co/150x150.png", // Using placeholder
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "https://media.licdn.com/dms/image/v2/D4D03AQF4zcDyMrjxCg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1707661148633?e=1754524800&v=beta&t=6NORgeODCuHvge_ddkiIn88t0Wt-B_2uuF922RquSVU",
+    imageUrl: "https://placehold.co/150x150.png", // Using placeholder
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
@@ -187,24 +187,14 @@ export default function HomePage() {
                   className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg"
                   style={member.name === "OM Jawanjal" ? { border: '3px solid red' } : {}}
                 >
-                  {member.name === "OM Jawanjal" ? (
-                    <AvatarImage
-                      key={member.imageUrl} 
-                      src={member.imageUrl}
-                      alt={member.name}
-                      data-ai-hint="placeholder avatar"
-                      width={150}
-                      height={150}
-                    />
-                  ) : (
-                    <AvatarImage
-                      key={member.imageUrl} 
-                      src={member.imageUrl}
-                      alt={member.name}
-                      data-ai-hint="profile photo"
-                      className="aspect-square h-full w-full"
-                    />
-                  )}
+                  <AvatarImage
+                    key={member.imageUrl} 
+                    src={member.imageUrl}
+                    alt={member.name}
+                    data-ai-hint="placeholder avatar"
+                    width={150}
+                    height={150}
+                  />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
                 {member.linkedinUrl ? (
@@ -228,4 +218,6 @@ export default function HomePage() {
     </div>
   );
 }
+    
+
     
