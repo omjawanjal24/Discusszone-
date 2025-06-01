@@ -105,9 +105,9 @@ export default function SignupPage() {
                       <FormLabel>OTP</FormLabel>
                       <FormControl>
                         <Input
-                          type="text"
+                          type="tel"
                           inputMode="numeric"
-                          autoComplete="new-password" // Changed to new-password
+                          autoComplete="one-time-code" 
                           placeholder="123456"
                           {...field}
                           maxLength={6}
