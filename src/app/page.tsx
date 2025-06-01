@@ -72,26 +72,26 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "/images/om-jawanjal.png",
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
-    dataAiHint: "profile avatar",
+    dataAiHint: "placeholder avatar",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "/images/subhajit-dolai.png",
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
-    dataAiHint: "profile avatar",
+    dataAiHint: "placeholder avatar",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "/images/praveenkumar-vaidya.png",
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
-    dataAiHint: "profile avatar",
+    dataAiHint: "placeholder avatar",
   },
   {
     name: "Kalyani Ghokle",
@@ -200,16 +200,15 @@ export default function HomePage() {
                 style={{ animationDelay: `${0.2 + index * 0.15}s` }}
               >
                 <Avatar 
-                  className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg" 
-                  style={member.name === "OM Jawanjal" ? { border: '2px solid red' } : {}}
+                  className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg"
                 >
                   <AvatarImage
                     src={member.imageUrl}
                     alt={member.name}
                     width={150}
                     height={150}
-                    key={member.imageUrl}
                     data-ai-hint={member.dataAiHint}
+                    key={member.imageUrl} 
                   />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
@@ -234,3 +233,4 @@ export default function HomePage() {
     </div>
   );
 }
+
