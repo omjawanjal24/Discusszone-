@@ -12,6 +12,8 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, subDays, isEqual, startOfDay, isToday, parse } from 'date-fns';
 import { GroupBookingDialog } from '@/components/booking/GroupBookingDialog';
 import { VISUAL_SEAT_IDS } from '@/components/booking/RoomLayoutVisual'; // Import seat IDs
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 const generateTimeSlots = (date: Date): TimeSlot[] => {
   const slots: TimeSlot[] = [];
@@ -271,7 +273,24 @@ export default function BookingPage() {
         </div>
         
         {isLoading ? (
-          <p className="text-center">Loading room availability...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, index) => (
+              <Card key={index} className="shadow-lg">
+                <CardHeader>
+                  <Skeleton className="h-7 w-4/5 mb-2" /> {/* Room Name skeleton */}
+                  <Skeleton className="h-5 w-2/5" /> {/* Capacity skeleton */}
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col">
+                  <Skeleton className="w-full aspect-video rounded-lg my-4" /> {/* RoomLayoutVisual placeholder */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[...Array(6)].map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         ) : rooms.every(room => room.slots.length === 0) && isToday(currentDate) ? (
            <p className="text-center text-destructive font-medium">
             Booking slots for today might be over or not yet started for the day (available 8 AM - 8 PM).

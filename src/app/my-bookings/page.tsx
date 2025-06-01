@@ -94,7 +94,7 @@ const MyBookingsPage = () => {
         <div className="space-y-8">
           <div className="text-center">
             <h1 className="font-headline text-3xl md:text-4xl font-bold">My Bookings</h1>
-            <p className="text-muted-foreground mt-2">Loading your booked slots...</p>
+            <Skeleton className="h-5 w-1/2 mx-auto mt-2" /> 
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
