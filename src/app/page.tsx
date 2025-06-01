@@ -153,11 +153,11 @@ export default function HomePage() {
               <p className="text-muted-foreground mb-6 text-base md:text-lg">
                 Use DiscussZone to easily book discussion rooms located within the KRC.
               </p>
-              <Link href="/booking" passHref>
-                <Button size="lg" className="font-semibold">
-                  Book a KRC Discuss Room
-                </Button>
-              </Link>
+              <Button asChild size="lg" className="font-semibold">
+                <a href="https://mitwpu.edu.in/life-wpu/library" target="_blank" rel="noopener noreferrer">
+                  Learn More
+                </a>
+              </Button>
             </div>
           </div>
         </div>
