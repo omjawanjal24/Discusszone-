@@ -33,9 +33,6 @@ const generateTimeSlots = (date: Date): TimeSlot[] => {
     return [];
   }
   
-  // Determine the starting hour for today's slots
-  // If current hour is before opening, start from openingHour
-  // If current hour is after opening, start from the next full hour if current minute > 0, else from current hour
   let startHourForToday = openingHour;
   if (currentHour >= openingHour) {
     startHourForToday = currentMinutes > 0 ? currentHour + 1 : currentHour;
@@ -52,7 +49,7 @@ const generateTimeSlots = (date: Date): TimeSlot[] => {
       startTime,
       endTime,
       isBooked: false,
-      occupants: [], // Initialize occupants
+      occupants: [], 
     });
   }
   return slots;
@@ -70,63 +67,67 @@ const initialRoomsData = (date: Date): Room[] => [
 export default function BookingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [currentDate, setCurrentDate] = useState<Date>(startOfDay(new Date()));
+  const [currentDate, setCurrentDate] = useState<Date | null>(null); // Initialize as null
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<{ room: Room; slot: TimeSlot } | null>(null);
 
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null); // Initialize as null
 
   useEffect(() => {
+    // Set initial dates on client-side
+    const now = new Date();
+    setCurrentDate(startOfDay(now));
+    setCurrentTime(now);
+
     const timerId = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // Update current time every minute for real-time slot status
+    }, 60000); 
     return () => clearInterval(timerId);
   }, []);
 
   useEffect(() => {
+    if (!currentDate || !currentTime) {
+      setIsLoading(true);
+      return;
+    }
     setIsLoading(true);
-    if (currentDate instanceof Date && !isNaN(currentDate.getTime())) {
-      // Attempt to load bookings from localStorage
-      const storedBookingsKey = `discussZoneBookings-${format(currentDate, 'yyyy-MM-dd')}`;
-      let mergedRoomsData: Room[];
-      try {
-        const storedBookings = localStorage.getItem(storedBookingsKey);
-        if (storedBookings) {
-          const parsedRooms = JSON.parse(storedBookings) as Room[];
-          // We need to regenerate slots for today to ensure they are fresh, then merge booking status
-          const freshRoomsData = initialRoomsData(currentDate);
-          mergedRoomsData = freshRoomsData.map(freshRoom => {
-            const storedRoom = parsedRooms.find(sr => sr.id === freshRoom.id);
-            if (storedRoom) {
-              return {
-                ...freshRoom,
-                slots: freshRoom.slots.map(freshSlot => {
-                  const storedSlot = storedRoom.slots.find(ss => ss.id === freshSlot.id);
-                  return storedSlot && storedSlot.isBooked ? { ...freshSlot, ...storedSlot } : freshSlot;
-                })
-              };
-            }
-            return freshRoom;
-          });
-        } else {
-          mergedRoomsData = initialRoomsData(currentDate);
-        }
-      } catch (e) {
-        console.error("Failed to parse bookings from localStorage", e);
+    
+    const storedBookingsKey = `discussZoneBookings-${format(currentDate, 'yyyy-MM-dd')}`;
+    let mergedRoomsData: Room[];
+    try {
+      const storedBookings = localStorage.getItem(storedBookingsKey);
+      if (storedBookings) {
+        const parsedRooms = JSON.parse(storedBookings) as Room[];
+        const freshRoomsData = initialRoomsData(currentDate);
+        mergedRoomsData = freshRoomsData.map(freshRoom => {
+          const storedRoom = parsedRooms.find(sr => sr.id === freshRoom.id);
+          if (storedRoom) {
+            return {
+              ...freshRoom,
+              slots: freshRoom.slots.map(freshSlot => {
+                const storedSlot = storedRoom.slots.find(ss => ss.id === freshSlot.id);
+                return storedSlot && storedSlot.isBooked ? { ...freshSlot, ...storedSlot } : freshSlot;
+              })
+            };
+          }
+          return freshRoom;
+        });
+      } else {
         mergedRoomsData = initialRoomsData(currentDate);
       }
-      setRooms(mergedRoomsData);
-    } else {
-      console.error("currentDate is invalid in BookingPage useEffect");
-      setRooms([]);
+    } catch (e) {
+      console.error("Failed to parse bookings from localStorage", e);
+      mergedRoomsData = initialRoomsData(currentDate);
     }
+    setRooms(mergedRoomsData);
     setIsLoading(false);
-  }, [currentDate, currentTime]); // Re-evaluate rooms when currentTime changes for dynamic slot generation
+  }, [currentDate, currentTime]); 
 
   const saveBookingsToLocalStorage = useCallback((updatedRooms: Room[]) => {
+    if (!currentDate) return;
     try {
       const bookingsKey = `discussZoneBookings-${format(currentDate, 'yyyy-MM-dd')}`;
       localStorage.setItem(bookingsKey, JSON.stringify(updatedRooms));
@@ -138,8 +139,8 @@ export default function BookingPage() {
 
 
   const handleOpenBookingDialog = useCallback((roomId: string, slotId: string) => {
-    if (!user) {
-      toast({ title: "Authentication Error", description: "You must be logged in to book a slot.", variant: "destructive" });
+    if (!user || !currentDate || !currentTime) {
+      toast({ title: "Error", description: "User or date information is missing.", variant: "destructive" });
       return;
     }
     if (!isToday(currentDate)) {
@@ -206,11 +207,9 @@ export default function BookingPage() {
               }
 
               const occupants: Array<{ seatId: string; name: string; isBooker: boolean }> = [];
-              // Assign booker to the first available visual seat ID
               occupants.push({ seatId: VISUAL_SEAT_IDS[0], name: user.email || 'Booker', isBooker: true });
-              // Assign group members to subsequent visual seat IDs
               groupMembers.forEach((member, index) => {
-                if (index + 1 < VISUAL_SEAT_IDS.length) { // Ensure we don't exceed available visual seat IDs
+                if (index + 1 < VISUAL_SEAT_IDS.length) { 
                   occupants.push({ seatId: VISUAL_SEAT_IDS[index + 1], name: member.name, isBooker: false });
                 }
               });
@@ -231,7 +230,7 @@ export default function BookingPage() {
                 bookedByName: user.email,
                 isGroupBooking,
                 groupMembers: isGroupBooking ? groupMembers : undefined,
-                occupants, // Save occupant details
+                occupants, 
               };
             }
             return slot;
@@ -241,16 +240,53 @@ export default function BookingPage() {
       return room;
     });
     setRooms(updatedRooms);
-    saveBookingsToLocalStorage(updatedRooms); // Save to localStorage
+    saveBookingsToLocalStorage(updatedRooms); 
     setIsBookingDialogOpen(false);
     setSelectedBookingDetails(null);
   }, [user, toast, rooms, formatTimeForDisplay, saveBookingsToLocalStorage]);
+  
+  if (isLoading || !currentDate || !currentTime) { // Adjusted loading condition
+    return (
+      <AuthGuard>
+        <div className="space-y-8">
+          <div className="text-center">
+            <Skeleton className="h-10 w-3/4 mx-auto mb-2" /> {/* Title skeleton */}
+            <Skeleton className="h-5 w-1/2 mx-auto mt-2" /> {/* Subtitle skeleton */}
+            <Skeleton className="h-4 w-1/3 mx-auto mt-1" /> {/* Date info skeleton */}
+          </div>
+          <div className="flex items-center justify-center space-x-4 my-6">
+            <Skeleton className="h-10 w-10 rounded-md" /> {/* Button skeleton */}
+            <Skeleton className="h-7 w-40 rounded-md" /> {/* Date display skeleton */}
+            <Skeleton className="h-10 w-10 rounded-md" /> {/* Button skeleton */}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, index) => (
+              <Card key={index} className="shadow-lg">
+                <CardHeader>
+                  <Skeleton className="h-7 w-4/5 mb-2" /> 
+                  <Skeleton className="h-5 w-2/5" /> 
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col">
+                  <Skeleton className="w-full aspect-video rounded-lg my-4" /> 
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[...Array(6)].map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
   
   return (
     <AuthGuard>
       <div className="space-y-8">
         <div className="text-center">
-          <h1 className="font-headline text-3xl md:text-4xl font-bold">Book a Discussion Slot</h1>
+          <h1 className="font-headline text-3xl md:text-4xl font-bold">Book a Slot</h1>
           <p className="text-muted-foreground mt-2">
             Select an available time slot for {format(currentDate, 'eeee, MMMM do, yyyy')}.
           </p>
@@ -272,26 +308,7 @@ export default function BookingPage() {
           </Button>
         </div>
         
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {[...Array(2)].map((_, index) => (
-              <Card key={index} className="shadow-lg">
-                <CardHeader>
-                  <Skeleton className="h-7 w-4/5 mb-2" /> {/* Room Name skeleton */}
-                  <Skeleton className="h-5 w-2/5" /> {/* Capacity skeleton */}
-                </CardHeader>
-                <CardContent className="flex-grow flex flex-col">
-                  <Skeleton className="w-full aspect-video rounded-lg my-4" /> {/* RoomLayoutVisual placeholder */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {[...Array(6)].map((_, i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : rooms.every(room => room.slots.length === 0) && isToday(currentDate) ? (
+        {rooms.every(room => room.slots.length === 0) && isToday(currentDate) ? (
            <p className="text-center text-destructive font-medium">
             Booking slots for today might be over or not yet started for the day (available 8 AM - 8 PM).
           </p>
@@ -312,7 +329,7 @@ export default function BookingPage() {
           </div>
         )}
       </div>
-      {selectedBookingDetails && user && ( // Ensure user is not null for userEmail prop
+      {selectedBookingDetails && user && ( 
         <GroupBookingDialog
           open={isBookingDialogOpen}
           onOpenChange={(open) => {
@@ -328,3 +345,4 @@ export default function BookingPage() {
     </AuthGuard>
   );
 }
+
