@@ -1,12 +1,13 @@
 
 // src/lib/firebaseConfig.ts
-// Last updated with user-provided config: 2024-08-20T12:30:00.000Z
+// Last updated with user-provided config: 2024-08-21T10:15:00.000Z 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, type Firestore, Timestamp } from "firebase/firestore";
 import { getAnalytics, type Analytics } from "firebase/analytics";
 
 // --- Configuration provided by the user ---
+// THIS CONFIGURATION WAS LAST DIRECTLY PROVIDED BY THE USER.
 // ENSURE THESE VALUES EXACTLY MATCH YOUR FIREBASE PROJECT'S CONFIGURATION
 // FROM THE FIREBASE CONSOLE (Project settings > General > Your apps > SDK setup and configuration > Config).
 const firebaseConfig = {
@@ -38,12 +39,16 @@ for (const key of essentialKeys) {
 
 // Check storageBucket and projectId consistency
 if (firebaseConfig.storageBucket && firebaseConfig.projectId) {
-    if (firebaseConfig.storageBucket.endsWith(".appspot.com") && firebaseConfig.projectId + ".appspot.com" !== firebaseConfig.storageBucket) {
-        console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.appspot.com' but doesn't directly match projectId '${firebaseConfig.projectId}.appspot.com'. This might be okay if custom, but often it's an error.`);
-    } else if (firebaseConfig.storageBucket.endsWith(".firebasestorage.app") &&
-               firebaseConfig.projectId + ".app.firebasestorage.app" !== firebaseConfig.storageBucket &&
-               firebaseConfig.projectId + ".firebasestorage.app" !== firebaseConfig.storageBucket ) {
-        console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.firebasestorage.app' but doesn't directly match projectId '${firebaseConfig.projectId}.firebasestorage.app' or '${firebaseConfig.projectId}.app.firebasestorage.app'. This might be okay if custom, but often it's an error.`);
+    const expectedStorageBucketAppspot = firebaseConfig.projectId + ".appspot.com";
+    const expectedStorageBucketFirebaseStorage = firebaseConfig.projectId + ".firebasestorage.app";
+    const expectedStorageBucketFirebaseStorageWithApp = firebaseConfig.projectId + ".app.firebasestorage.app";
+
+    if (firebaseConfig.storageBucket.endsWith(".appspot.com") && firebaseConfig.storageBucket !== expectedStorageBucketAppspot) {
+        console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.appspot.com' but doesn't directly match projectId '${expectedStorageBucketAppspot}'. This might be okay if custom, but often it's an error.`);
+    } else if (firebaseConfig.storageBucket.endsWith(".firebasestorage.app")) {
+        if (firebaseConfig.storageBucket !== expectedStorageBucketFirebaseStorage && firebaseConfig.storageBucket !== expectedStorageBucketFirebaseStorageWithApp) {
+             console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.firebasestorage.app' but doesn't match expected formats: '${expectedStorageBucketFirebaseStorage}' or '${expectedStorageBucketFirebaseStorageWithApp}'. This might be okay if custom, but often it's an error.`);
+        }
     }
 }
 
@@ -71,12 +76,11 @@ if (hasPlaceholders) {
       console.log("FirebaseConfig.ts: Using existing Firebase app instance. Current app projectId:", existingApp.options.projectId, "Attempted config projectId:", firebaseConfig.projectId);
 
       if (existingApp.options.projectId !== firebaseConfig.projectId ||
-          existingApp.options.appId !== firebaseConfig.appId || // Also check appId
-          existingApp.options.apiKey !== firebaseConfig.apiKey   // And apiKey
+          existingApp.options.appId !== firebaseConfig.appId ||
+          existingApp.options.apiKey !== firebaseConfig.apiKey
          ) {
         console.warn("FirebaseConfig.ts: WARNING - An existing Firebase app instance has different critical configuration values (projectId, appId, or apiKey) than the current firebaseConfig. This can lead to major issues. Attempting to initialize a secondary app instance. If this is not intended, review your setup. Existing App Options:", JSON.stringify(existingApp.options, null, 2), "New Config:", JSON.stringify(firebaseConfig, null, 2));
         try {
-            // Generate a unique name for the secondary app to avoid conflicts
             const secondaryAppName = `secondary_app_${firebaseConfig.projectId}_${Date.now()}`;
             app = initializeApp(firebaseConfig, secondaryAppName);
             console.log(`FirebaseConfig.ts: Secondary Firebase app '${secondaryAppName}' initialized successfully due to config mismatch. Full config used:`, JSON.stringify(app.options, null, 2));
@@ -88,7 +92,7 @@ New Config ProjectID: ${firebaseConfig.projectId}
 Error: ${secondaryAppError.message || 'Unknown error'}
 This is highly unusual. Check if multiple Firebase instances are being managed or if your configuration is truly correct for the primary app.`;
             if (typeof window !== "undefined") alert(alertMessage);
-            app = undefined; // Mark as unusable
+            app = undefined;
         }
       } else {
          console.log("FirebaseConfig.ts: Existing app's critical config values match current config. Re-using instance. Full config details:", JSON.stringify(existingApp.options, null, 2));
@@ -174,5 +178,6 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
   }
 }
 
-export { app, auth, db, analytics };
+export { app, auth, db, analytics, Timestamp };
 
+    
