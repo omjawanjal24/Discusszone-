@@ -16,16 +16,45 @@ const firebaseConfig = {
   measurementId: "G-S5EM2Q9XLQ"
 };
 
+// --- CRITICAL DIAGNOSTIC CHECK ---
+let hasPlaceholder = false;
+for (const [key, value] of Object.entries(firebaseConfig)) {
+  if (typeof value === 'string' && (value.includes("YOUR_") || value === "" || value.includes("example") || value.includes("placeholder"))) {
+    console.error(`FirebaseConfig.ts: CRITICAL ERROR - Placeholder or invalid value detected for config key: "${key}". Value: "${value}". YOU MUST REPLACE THIS with the actual value from your Firebase project settings.`);
+    hasPlaceholder = true;
+  }
+}
+
+if (hasPlaceholder) {
+  console.error("FirebaseConfig.ts: ABORTING Firebase initialization due to placeholder values. Please correct your src/lib/firebaseConfig.ts file with details from your Firebase project console.");
+  // To prevent Firebase from attempting to initialize with bad config,
+  // we effectively stop further processing here if placeholders are found.
+  // This is a drastic measure for debugging. In a real app, you might handle this differently.
+  // For now, we'll let it try to initialize so Firebase can throw its specific error,
+  // but the console error above should be very clear.
+} else {
+  console.log("FirebaseConfig.ts: All Firebase config values appear to be filled. Proceeding with initialization.");
+}
+
 // Diagnostic log: Check if these values match your Firebase project in the console.
 console.log("FirebaseConfig.ts: Initializing with projectId:", firebaseConfig.projectId);
-console.log("FirebaseConfig.ts: Full config being used:", JSON.stringify(firebaseConfig, null, 2));
+console.log("FirebaseConfig.ts: Full config being used by initializeApp:", JSON.stringify(firebaseConfig, null, 2));
+
 
 let app: FirebaseApp;
 
 // Initialize Firebase only if it hasn't been initialized yet
 if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-  console.log("FirebaseConfig.ts: Firebase app initialized for the first time.");
+  console.log("FirebaseConfig.ts: Attempting to initialize Firebase app for the first time...");
+  try {
+    app = initializeApp(firebaseConfig);
+    console.log("FirebaseConfig.ts: Firebase app initialized successfully.");
+  } catch (e: any) {
+    console.error("FirebaseConfig.ts: ERROR DURING initializeApp:", e.message, e);
+    // If initializeApp itself fails, we rethrow to make it obvious.
+    // This error (auth/configuration-not-found) usually happens later, when auth methods are called.
+    throw e; 
+  }
 } else {
   app = getApp(); // Use the existing app if already initialized
   console.log("FirebaseConfig.ts: Using existing Firebase app instance.");
