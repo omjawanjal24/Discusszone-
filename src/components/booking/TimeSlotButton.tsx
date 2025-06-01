@@ -74,16 +74,16 @@ const TimeSlotButtonComponent = ({ slot, roomId, onBookSlot, currentTime }: Time
             variant={
               slot.isBooked ? "destructive" :
               isPastSlot ? "outline" :
-              "default" // 'default' variant uses primary color (green)
+              "available" 
             }
             className={cn(
               "w-full h-12 text-xs md:text-sm transition-all duration-300 ease-in-out transform",
-              "flex flex-col items-center justify-center p-1", // Common classes
+              "flex flex-col items-center justify-center p-1", 
               slot.isBooked
-                ? "cursor-not-allowed" // Destructive variant handles red color
+                ? "cursor-not-allowed" 
                 : isPastSlot
-                ? "cursor-not-allowed bg-muted text-muted-foreground opacity-70 hover:bg-muted hover:text-muted-foreground" // Muted style for past slots
-                : "hover:scale-105 focus:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2", // Default (green) variant specific styles
+                ? "cursor-not-allowed bg-muted text-muted-foreground opacity-70 hover:bg-muted hover:text-muted-foreground" 
+                : "hover:scale-105 focus:scale-105 focus:ring-2 focus:ring-ring focus:ring-offset-2", 
               isClicked && !slot.isBooked && !isPastSlot && "animate-slot-pulse"
             )}
             onClick={handleClick}
