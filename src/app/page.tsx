@@ -31,7 +31,7 @@ const ParallaxSection = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // handleScroll(); // Initial call for parallax effect - re-enabled as it was commented out in prior step
+    // handleScroll(); // Initial call for parallax effect
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -137,8 +137,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* This section which previously held the standalone image is now removed. */}
       
       <ParallaxSection />
 
@@ -147,12 +145,12 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             <div className="lg:w-1/2">
               <Image
-                src="https://placehold.co/600x450.png"
-                alt="Knowledge Resource Center"
+                src="https://mitwpu.edu.in/uploads/images/library_6.webp"
+                alt="Knowledge Resource Center Interior"
                 width={600}
                 height={450}
                 className="rounded-lg shadow-xl object-cover"
-                data-ai-hint="library study"
+                data-ai-hint="library interior"
               />
             </div>
             <div className="lg:w-1/2 text-left">
@@ -214,5 +212,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
