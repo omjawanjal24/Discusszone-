@@ -3,13 +3,18 @@
 // Last updated with user-provided config: 2024-08-21T10:15:00.000Z
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore, Timestamp, enableIndexedDbPersistence } from "firebase/firestore";
+import { 
+  getFirestore, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  memoryLocalCache, // For explicit fallback on server or if persistent fails badly
+  type Firestore, 
+  Timestamp 
+} from "firebase/firestore";
 import { getAnalytics, type Analytics } from "firebase/analytics";
 
 // --- Configuration provided by the user ---
-// THIS CONFIGURATION WAS LAST DIRECTLY PROVIDED BY THE USER.
-// ENSURE THESE VALUES EXACTLY MATCH YOUR FIREBASE PROJECT'S CONFIGURATION
-// FROM THE FIREBASE CONSOLE (Project settings > General > Your apps > SDK setup and configuration > Config).
 const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
@@ -37,7 +42,6 @@ for (const key of essentialKeys) {
   }
 }
 
-// Check storageBucket and projectId consistency
 if (firebaseConfig.storageBucket && firebaseConfig.projectId) {
     const expectedStorageBucketAppspot = firebaseConfig.projectId + ".appspot.com";
     const expectedStorageBucketFirebaseStorage = firebaseConfig.projectId + ".firebasestorage.app";
@@ -64,7 +68,6 @@ if (hasPlaceholders) {
   if (typeof window !== "undefined") {
     alert(placeholderErrorMsg);
   }
-  // Services will remain undefined
 } else {
   try {
     if (!getApps().length) {
@@ -92,7 +95,6 @@ New Config ProjectID: ${firebaseConfig.projectId}
 Error: ${secondaryAppError.message || 'Unknown error'}
 This is highly unusual. Check if multiple Firebase instances are being managed or if your configuration is truly correct for the primary app.`;
             if (typeof window !== "undefined") alert(alertMessage);
-            // @ts-ignore
             app = undefined;
         }
       } else {
@@ -104,34 +106,38 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
     if (app) {
         auth = getAuth(app);
         console.log("FirebaseConfig.ts: Firebase Auth initialized.");
-        db = getFirestore(app);
-        console.log("FirebaseConfig.ts: Firebase Firestore initialized.");
 
-        if (typeof window !== 'undefined') { // Persistence only works in browser
-            enableIndexedDbPersistence(db)
-                .then(() => {
-                    console.log("FirebaseConfig.ts: Firestore IndexedDB persistence enabled successfully. Firestore documents can now be cached for offline access.");
-                    // alert("FirebaseConfig.ts: Firestore Offline Data READY (Persistence Enabled)"); // Optional: For explicit success confirmation
-                })
-                .catch((err) => {
-                    let alertMessage = "";
-                    if (err.code === 'failed-precondition') {
-                        alertMessage = "FirebaseConfig.ts: OFFLINE DATA WARNING - Failed to enable Firestore offline persistence. This often happens if you have multiple tabs of this application open. Close other tabs and hard refresh this one for better offline support. Firestore will use a temporary in-memory cache for this session.";
-                        console.warn(alertMessage, err);
-                    } else if (err.code === 'unimplemented') {
-                        alertMessage = "FirebaseConfig.ts: OFFLINE DATA WARNING - Your browser does not support Firestore offline persistence. Offline features will be limited. Firestore will use a temporary in-memory cache for this session.";
-                        console.warn(alertMessage, err);
-                    } else {
-                        alertMessage = `FirebaseConfig.ts: OFFLINE DATA WARNING - Failed to enable Firestore offline persistence for an unknown reason (Code: ${err.code}). Offline features will be limited. Firestore will use a temporary in-memory cache for this session.`;
-                        console.warn(alertMessage, err);
-                    }
-                    if (typeof window !== "undefined" && alertMessage) {
-                        alert(alertMessage); // Make persistence failure very obvious
-                    }
+        if (typeof window !== 'undefined') { // Client-side (browser)
+            try {
+                console.log("FirebaseConfig.ts: Attempting to initialize Firestore with multi-tab persistent cache.");
+                db = initializeFirestore(app, {
+                    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
                 });
+                console.log("FirebaseConfig.ts: Firestore successfully configured for multi-tab persistent cache.");
+                // Alert only once per session to avoid annoyance during development hot reloads.
+                if (!sessionStorage.getItem('firestorePersistenceConfigAlertShown')) {
+                    alert("FirebaseConfig.ts: Firestore is now configured for enhanced offline data access (multi-tab). Data accessed online will be cached locally.");
+                    sessionStorage.setItem('firestorePersistenceConfigAlertShown', 'true');
+                }
+            } catch (error: any) {
+                console.error("FirebaseConfig.ts: ERROR - Failed to initialize Firestore with multi-tab persistent cache:", error);
+                // Fallback to default Firestore initialization (which uses memory cache if persistence fails)
+                db = getFirestore(app); // Re-initialize with default (likely memory cache)
+                console.warn("FirebaseConfig.ts: Firestore initialized with default (likely memory) cache due to persistent cache setup error.");
+                if (!sessionStorage.getItem('firestorePersistenceErrorAlertShown')) {
+                    alert(`FirebaseConfig.ts: Firestore OFFLINE DATA MIGHT NOT WORK as expected. Error during advanced offline setup: ${error.message}. Using temporary cache.`);
+                    sessionStorage.setItem('firestorePersistenceErrorAlertShown', 'true');
+                }
+            }
+        } else { // Server-side or non-browser environment
+            // Use memoryLocalCache for explicit server-side configuration or getFirestore for default behavior.
+            db = initializeFirestore(app, { localCache: memoryLocalCache() });
+            console.log("FirebaseConfig.ts: Firebase Firestore initialized for server/non-browser (explicit memory cache).");
         }
+        
+        console.log("FirebaseConfig.ts: Firebase Firestore service instance available.");
 
-        // Initialize Analytics if in browser and measurementId is available
+
         if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
             try {
                 analytics = getAnalytics(app);
@@ -194,11 +200,8 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
       console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle);
       alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\n...(see console for full details)" : ""));
     }
-    // @ts-ignore
     app = undefined;
-    // @ts-ignore
     auth = undefined;
-    // @ts-ignore
     db = undefined;
     analytics = null;
   }
@@ -206,4 +209,6 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
 
 export { app, auth, db, analytics, Timestamp };
     
+    
+
     
