@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card'; // Added import
 import { Trash2, Info, Users, User } from 'lucide-react';
 
 const formatTimeForDisplay = (time24: string): string => {
