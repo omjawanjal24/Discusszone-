@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image'; // Keep for KRC image for now, will be standard img tag in code
+import Image from 'next/image';
 import { CalendarCheck, Users, Clock, ShieldCheck, Library } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -67,7 +67,7 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://media.licdn.com/dms/image/v2/D5603AQGLmDWHGeIbFw/profile-displayphoto-shrink_800_800/B56Za5oi07GgAc-/0/1746871137057?e=1754524800&v=beta&t=b-83xeZHS1NBtijicF247tEqmSv6pZYYHk7_Out8a1g",
+    imageUrl: "https://placehold.co/150x150.png", // Changed to placeholder for testing
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
   },
@@ -185,25 +185,14 @@ export default function HomePage() {
             {teamMembers.map((member) => (
               <div key={member.name} className="flex flex-col items-center text-center">
                 <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg">
-                  {member.name === "OM Jawanjal" ? (
-                    <img 
-                      src={member.imageUrl} 
-                      alt={member.name} 
-                      className="aspect-square h-full w-full rounded-full object-cover"
-                      style={{ border: '2px solid red' }} // Added red border for troubleshooting this specific img tag
-                    />
-                  ) : (
-                    <>
-                      <AvatarImage 
-                        key={member.imageUrl} 
-                        src={member.imageUrl} 
-                        alt={member.name} 
-                        data-ai-hint="profile photo"
-                        className="aspect-square h-full w-full" 
-                      />
-                      <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
-                    </>
-                  )}
+                  <AvatarImage
+                    key={member.imageUrl} 
+                    src={member.imageUrl}
+                    alt={member.name}
+                    data-ai-hint={member.name === "OM Jawanjal" ? "placeholder avatar" : "profile photo"} // Adjusted hint for OM's placeholder
+                    className="aspect-square h-full w-full"
+                  />
+                  <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
                 {member.linkedinUrl ? (
                   <a
@@ -226,5 +215,4 @@ export default function HomePage() {
     </div>
   );
 }
-
     
