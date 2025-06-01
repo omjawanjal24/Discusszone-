@@ -12,10 +12,10 @@ const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
   projectId: "cogent-dragon-460015-a8",
-  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app",
+  storageBucket: "cogent-dragon-460015-a8.firebasestorage.app", // Using .firebasestorage.app as per latest user input
   messagingSenderId: "923402381047",
-  appId: "1:923402381047:web:bb3bdb9b9182876dbc95f2",
-  measurementId: "G-S5EM2Q9XLQ"
+  appId: "1:923402381047:web:074980ae75c2b81fbc95f2", // UPDATED
+  measurementId: "G-J0FBKM72XN" // UPDATED
 };
 
 // --- Diagnostic Logging & Placeholder Checks ---
@@ -26,7 +26,7 @@ let hasPlaceholders = false;
 for (const key of essentialKeys) {
   const value = firebaseConfig[key];
   // More stringent check: includes common placeholders or very short values (adjust length as needed)
-  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 10 && key !== 'measurementId') { // measurementId can be shorter
+  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 10 && key !== 'measurementId' && key !== 'storageBucket') {
     const errorMessage = `FirebaseConfig.ts: CRITICAL ERROR - Placeholder or potentially invalid/short value detected for config key: '${key}'. Value: '${value}'. Please replace it with your actual Firebase project credential in src/lib/firebaseConfig.ts.`;
     console.error(errorMessage);
     if (typeof window !== "undefined") {
@@ -36,16 +36,13 @@ for (const key of essentialKeys) {
   }
 }
 
-// Specific warning if the project ID and API key look like common default template ones.
-// This is a general check. If "cogent-dragon-460015-a8" IS your actual project, this specific warning might be a false positive,
-// but the general principle of verifying all credentials remains.
-if (firebaseConfig.projectId === "cogent-dragon-460015-a8" && firebaseConfig.apiKey === "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc") {
-    const defaultWarning = `FirebaseConfig.ts: WARNING - The Firebase configuration might be using default template values for projectId AND apiKey for project 'cogent-dragon-460015-a8'.
-    If these are NOT your actual credentials for an active project named 'cogent-dragon-460015-a8',
-    you MUST replace them with YOUR OWN project's credentials from the Firebase Console.
-    Using incorrect values will lead to 'auth/configuration-not-found' or other connection errors.`;
-    console.warn(defaultWarning);
+if (firebaseConfig.storageBucket.endsWith(".appspot.com") && firebaseConfig.projectId + ".appspot.com" !== firebaseConfig.storageBucket) {
+    console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.appspot.com' but doesn't directly match projectId '${firebaseConfig.projectId}.appspot.com'. This might be okay if custom, but often it's an error.`);
+} else if (firebaseConfig.storageBucket.endsWith(".firebasestorage.app") && firebaseConfig.projectId + ".app.firebasestorage.app" !== firebaseConfig.storageBucket && firebaseConfig.projectId + ".firebasestorage.app" !== firebaseConfig.storageBucket ) {
+    // Allow for both projectID.app.firebasestorage.app and projectID.firebasestorage.app
+    // console.warn(`FirebaseConfig.ts: WARNING - storageBucket '${firebaseConfig.storageBucket}' uses '.firebasestorage.app' but doesn't directly match projectId '${firebaseConfig.projectId}.firebasestorage.app' or '${firebaseConfig.projectId}.app.firebasestorage.app'. This might be okay if custom, but often it's an error.`);
 }
+
 
 let app: FirebaseApp;
 let auth: Auth;
@@ -75,7 +72,8 @@ if (hasPlaceholders) {
       app = getApp();
       console.log("FirebaseConfig.ts: Using existing Firebase app instance. Current app projectId:", app.options.projectId, "Attempted config projectId:", firebaseConfig.projectId);
       if (app.options.projectId !== firebaseConfig.projectId) {
-        console.warn("FirebaseConfig.ts: WARNING - An existing Firebase app instance has a different projectId than the current firebaseConfig. This might lead to unexpected behavior if not intentional.");
+        console.warn("FirebaseConfig.ts: WARNING - An existing Firebase app instance has a different projectId than the current firebaseConfig. This might lead to unexpected behavior if not intentional. Re-initializing with new config.");
+        app = initializeApp(firebaseConfig, "secondary"); // Initialize as a secondary app if primary differs, or handle differently
       }
     }
 
@@ -84,7 +82,7 @@ if (hasPlaceholders) {
     db = getFirestore(app);
     console.log("FirebaseConfig.ts: Firebase Firestore initialized.");
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && firebaseConfig.measurementId) { // Only initialize if measurementId is present
         try {
             analytics = getAnalytics(app);
             console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
@@ -93,7 +91,7 @@ if (hasPlaceholders) {
             analytics = null;
         }
     } else {
-      console.log("FirebaseConfig.ts: Analytics not initialized (not in browser environment).");
+      console.log("FirebaseConfig.ts: Analytics not initialized (not in browser environment or no measurementId).");
     }
 
   } catch (error: any) {
