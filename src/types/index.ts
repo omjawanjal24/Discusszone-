@@ -5,9 +5,10 @@ export interface User {
   prn?: string; // Will be fetched from Firestore
   gender?: 'male' | 'female' | 'other'; // Will be fetched from Firestore
   role?: 'student' | 'faculty'; // Will be fetched from Firestore
-  avatarUrl?: string;
+  avatarUrl?: string; // Will be fetched/set in Firestore
   isAdmin?: boolean; // Will be fetched from Firestore
   isVerified: boolean; // From firebaseUser.emailVerified
+  createdAt?: Date; // Timestamp of profile creation
 }
 
 export interface GroupMember {
@@ -54,3 +55,4 @@ export interface AdminBookingView extends UserBooking {
   originalRoomId: string; // To help locate the room for cancellation
   originalDate: string; // Date in YYYY-MM-DD format for localStorage key
 }
+
