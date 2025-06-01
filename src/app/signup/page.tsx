@@ -107,7 +107,7 @@ export default function SignupPage() {
                         <Input
                           type="text"
                           inputMode="numeric"
-                          autoComplete="one-time-code"
+                          autoComplete="off"
                           placeholder="123456"
                           {...field}
                           maxLength={6}
