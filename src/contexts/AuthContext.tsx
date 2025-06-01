@@ -127,7 +127,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     } catch (error: any) {
       console.error("Firebase signup error:", error);
-      toast({ title: "Signup Failed", description: error.message || "Could not create account.", variant: "destructive" });
+      if (error.code === 'auth/email-already-in-use') {
+        toast({
+          title: "Signup Failed",
+          description: "This email address is already in use. Please try logging in or use a different email.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: error.message || "Could not create account. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
