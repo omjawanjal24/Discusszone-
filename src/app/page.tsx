@@ -67,28 +67,28 @@ const teamMembers = [
   {
     name: "OM Jawanjal",
     role: "Creator & Developer",
-    imageUrl: "https://placehold.co/150x150.png",
+    imageUrl: "/images/om-jawanjal.png", // Updated
     linkedinUrl: "https://www.linkedin.com/in/om-jawanjal-5606162a4/",
     avatarHint: "OJ",
   },
   {
     name: "Subhajit Dolai",
     role: "Manager",
-    imageUrl: "https://placehold.co/150x150.png", 
+    imageUrl: "/images/subhajit-dolai.png", // Updated
     linkedinUrl: "https://www.linkedin.com/in/subhajit-dolai/",
     avatarHint: "SD",
   },
   {
     name: "Dr. Praveenkumar Vaidya",
     role: "Librarian",
-    imageUrl: "https://placehold.co/150x150.png", 
+    imageUrl: "/images/praveenkumar-vaidya.png", // Updated
     linkedinUrl: "https://www.linkedin.com/in/praveenvaidya/",
     avatarHint: "PV",
   },
   {
     name: "Kalyani Ghokle",
     role: "Asst. Librarian",
-    imageUrl: "https://placehold.co/150x150.png", 
+    imageUrl: "https://placehold.co/150x150.png", // Stays placeholder
     linkedinUrl: null,
     avatarHint: "KG",
   },
@@ -145,7 +145,7 @@ export default function HomePage() {
                 alt="Knowledge Resource Center Interior"
                 width={600}
                 height={450}
-                className="rounded-lg shadow-xl"
+                className="rounded-lg shadow-xl border-4 border-red-500 block"
                 data-ai-hint="library interior"
               />
             </div>
@@ -185,7 +185,6 @@ export default function HomePage() {
               <div key={member.name} className="flex flex-col items-center text-center">
                 <Avatar 
                   className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg"
-                  style={member.name === "OM Jawanjal" ? { border: '3px solid red' } : {}}
                 >
                   <AvatarImage
                     key={member.imageUrl} 
@@ -193,7 +192,7 @@ export default function HomePage() {
                     alt={member.name}
                     width={150}
                     height={150}
-                    data-ai-hint="placeholder avatar"
+                    data-ai-hint={member.imageUrl.startsWith('/images/') ? "profile avatar" : "placeholder avatar"}
                   />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
@@ -218,6 +217,4 @@ export default function HomePage() {
     </div>
   );
 }
-    
-
     
