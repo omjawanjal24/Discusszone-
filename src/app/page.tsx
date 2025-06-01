@@ -208,18 +208,19 @@ export default function HomePage() {
                   <AvatarImage src={member.imageUrl} alt={member.name} data-ai-hint="profile photo" />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>
                 </Avatar>
-                <h3 className="font-headline text-xl font-semibold text-white">{member.name}</h3>
-                <p className="text-yellow-300 text-sm mb-1">{member.role}</p>
-                {member.linkedinUrl && (
+                {member.linkedinUrl ? (
                   <a
                     href={member.linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-slate-300 hover:text-yellow-400 transition-colors inline-flex items-center"
+                    className="font-headline text-xl font-semibold text-white hover:text-yellow-400 transition-colors"
                   >
-                    <Linkedin size={16} className="mr-1.5" /> LinkedIn
+                    {member.name}
                   </a>
+                ) : (
+                  <h3 className="font-headline text-xl font-semibold text-white">{member.name}</h3>
                 )}
+                <p className="text-yellow-300 text-sm mt-1 mb-1">{member.role}</p>
               </div>
             ))}
           </div>
