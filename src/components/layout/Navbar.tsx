@@ -32,7 +32,7 @@ export function Navbar() {
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <DiscussionIcon className="h-8 w-8 text-primary" />
-          <span className="font-headline text-xl font-semibold">DiscussZone</span>
+          <span className="font-headline text-xl font-semibold dark:text-primary">DiscussZone</span>
         </Link>
         <nav className="flex items-center gap-2 md:gap-4">
           <Link href="/booking" passHref>
