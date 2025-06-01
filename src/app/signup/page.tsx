@@ -14,13 +14,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
-import type { User } from '@/types';
 import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
-  const { toast } = useToast();
+  const { signup } = useAuth(); // Auth context signup
+  const { toast } = useToast(); // Direct toast usage
   const router = useRouter();
 
   const form = useForm<SignupFormValues>({
@@ -30,32 +29,20 @@ export default function SignupPage() {
       prn: '',
       password: '',
       confirmPassword: '',
+      // gender and role will be undefined initially, user must select
     },
   });
 
   async function onSubmitSignup(data: SignupFormValues) {
     setIsLoading(true);
-    // Simulate API call for signup
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate API call if needed, though auth.signup handles localStorage directly
+    await new Promise(resolve => setTimeout(resolve, 500)); 
     
-    const newUser: User = {
-      email: data.email,
-      prn: data.prn,
-      gender: data.gender,
-      role: data.role,
-      // In a real app, password would be hashed on the backend
-    };
-    
-    signup(newUser); // Update auth context, which also handles localStorage
+    signup(data); // Call the signup function from AuthContext
+    // AuthContext's signup will handle toast and redirection
     
     setIsLoading(false);
-    toast({
-      title: "Signup Successful!",
-      description: "You have been successfully signed up and logged in.",
-    });
-    // AuthProvider should redirect to '/booking' upon successful login/signup state change
-    // but we can also explicitly push if needed, though AuthProvider should handle it.
-    // router.push('/booking'); 
+    // Toast and redirection are now handled by AuthContext.signup
   }
 
   return (

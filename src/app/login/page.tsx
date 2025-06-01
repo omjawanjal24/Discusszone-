@@ -12,12 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from "@/hooks/use-toast";
-import type { User } from '@/types';
+import { useToast } from "@/hooks/use-toast"; // Toast is now handled by AuthContext
 
 export default function LoginPage() {
-  const { login } = useAuth();
-  const { toast } = useToast();
+  const { login } = useAuth(); // Auth context login
+  // const { toast } = useToast(); // Toast is now handled by AuthContext
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -30,34 +29,13 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
-    // Simulate API call for login
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Mock authentication:
-    if (data.email.endsWith('@mitwpu.edu.in') || data.email.endsWith('@mitwpu.ac.in') || data.email.endsWith('@mituniversity.edu.in')) {
-      const isAdmin = data.email === 'om.jawanjal@mitwpu.edu.in'; // Simulate admin user
-      const mockUser: User = {
-        email: data.email,
-        prn: isAdmin ? 'ADMIN00000' : '0000000000', 
-        gender: 'other',
-        role: isAdmin ? 'faculty' : 'student', // Admins might be faculty
-        isAdmin: isAdmin,
-      };
-      login(mockUser);
-      toast({
-        title: "Login Successful!",
-        description: `Welcome back, ${data.email}${isAdmin ? ' (Admin)' : ''}`,
-      });
-    } else {
-      form.setError("email", { type: "manual", message: "Invalid email or password." });
-      form.setError("password", { type: "manual", message: " " }); // To show error on password field too
-      toast({
-        title: "Login Failed",
-        description: "Invalid email or password.",
-        variant: "destructive",
-      });
-    }
+    login(data); // Call login from AuthContext, which handles logic and toasts
+
     setIsLoading(false);
+    // Toasts and redirection are now handled by AuthContext.login
   }
 
   return (
@@ -65,7 +43,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Welcome Back!</CardTitle>
-          <CardDescription>Log in to access DiscussZone.</CardDescription>
+          <CardDescription>Log in to access DiscussZone. If signing up for the first time, logging in will verify your account.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

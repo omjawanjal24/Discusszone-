@@ -8,6 +8,7 @@ export interface User {
   password?: string; // Should not be stored in frontend state long-term if real auth
   avatarUrl?: string;
   isAdmin?: boolean; // Added for admin role
+  isVerified: boolean; // Added for email verification flow
 }
 
 export interface GroupMember {
