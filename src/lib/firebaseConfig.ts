@@ -3,19 +3,22 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
-import { getAnalytics, type Analytics } from "firebase/analytics";
+import { getAnalytics, type Analytics } from "firebase/analytics"; // Added as per user's snippet
 
 // --- CRITICAL: THESE VALUES MUST EXACTLY MATCH YOUR FIREBASE PROJECT'S CONFIGURATION ---
 // --- Make sure this is YOUR project's config from the Firebase Console. ---
 // --- Project settings > General > Your apps > SDK setup and configuration > Config ---
+// The values below are based on what you've provided or were in the initial project.
+// If "cogent-dragon-460015-a8" is NOT your active project ID, or if any of these
+// values are incorrect, Firebase initialization WILL FAIL.
 const firebaseConfig = {
   apiKey: "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc",
   authDomain: "cogent-dragon-460015-a8.firebaseapp.com",
   projectId: "cogent-dragon-460015-a8",
-  storageBucket: "cogent-dragon-460015-a8.appspot.com", // Changed to .appspot.com
+  storageBucket: "cogent-dragon-460015-a8.appspot.com", // Standard format. If your console shows .firebasestorage.app, that's unusual but should be used if verified.
   messagingSenderId: "923402381047",
   appId: "1:923402381047:web:bb3bdb9b9182876dbc95f2",
-  measurementId: "G-S5EM2Q9XLQ"
+  measurementId: "G-S5EM2Q9XLQ" // Optional for base SDK, but good to have if using Analytics
 };
 
 // --- Diagnostic Logging & Placeholder Checks ---
@@ -25,35 +28,30 @@ const essentialKeys: (keyof typeof firebaseConfig)[] = ["apiKey", "authDomain", 
 let hasPlaceholders = false;
 for (const key of essentialKeys) {
   const value = firebaseConfig[key];
-  // Basic check for placeholders or clearly invalid short values (e.g., less than 5 chars for most IDs/keys)
-  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 5) {
+  if (!value || value.includes("YOUR_") || value.includes("XXXX") || value.length < 5) { // Basic check
     const errorMessage = `FirebaseConfig.ts: CRITICAL ERROR - Placeholder or invalid value detected for config key: '${key}'. Value: '${value}'. Please replace it with your actual Firebase project credential in src/lib/firebaseConfig.ts.`;
     console.error(errorMessage);
     if (typeof window !== "undefined") {
-      alert(errorMessage); // Make it very visible in the browser
+      alert(errorMessage);
     }
     hasPlaceholders = true;
   }
 }
 
-// Specific check if the default template project ID and API key are still being used.
-// These are the exact values from the template this project was based on.
+// Specific check if the default template project ID and API key are still being used for "cogent-dragon-460015-a8".
 if (firebaseConfig.projectId === "cogent-dragon-460015-a8" && firebaseConfig.apiKey === "AIzaSyCf9HIGRbBh6-RuPFymGe4sj7BqZfKmlHc") {
-    const defaultWarning = `FirebaseConfig.ts: WARNING - The Firebase configuration appears to be using the default template values for projectId AND apiKey.
-    Project ID: ${firebaseConfig.projectId}
-    API Key: ${firebaseConfig.apiKey}
+    const defaultWarning = `FirebaseConfig.ts: WARNING - The Firebase configuration appears to be using the default template values for projectId AND apiKey for project 'cogent-dragon-460015-a8'.
     If these are NOT your actual credentials for an active project named 'cogent-dragon-460015-a8',
     you MUST replace them with YOUR OWN project's credentials from the Firebase Console (Project settings > General > Your apps > SDK setup and configuration > Config).
     Using incorrect values will lead to 'auth/configuration-not-found' or other connection errors.`;
     console.warn(defaultWarning);
-    // It's okay if these ARE the actual credentials for a project named "cogent-dragon-460015-a8", but this warning is a strong reminder to double-check.
 }
 
 
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
-let analytics: Analytics | null = null;
+let analytics: Analytics | null = null; // Initialize as null
 
 if (hasPlaceholders) {
   const placeholderErrorMsg = "FirebaseConfig.ts: Firebase initialization HALTED due to placeholder or invalid values in the configuration. Please fix them in src/lib/firebaseConfig.ts and reload.";
@@ -61,7 +59,7 @@ if (hasPlaceholders) {
   if (typeof window !== "undefined") {
     alert(placeholderErrorMsg);
   }
-  // Intentionally make app unusable if config is bad
+  // Intentionally make app unusable if config is bad to prevent further confusing errors.
   // @ts-ignore
   app = undefined; 
   // @ts-ignore
@@ -86,6 +84,8 @@ if (hasPlaceholders) {
     // Initialize Analytics if in a browser environment
     if (typeof window !== 'undefined') {
         try {
+            // Check if analytics was already initialized if getApps().length > 0, though initializeApp should handle this.
+            // For safety, just get/initialize it.
             analytics = getAnalytics(app);
             console.log("FirebaseConfig.ts: Firebase Analytics initialized.");
         } catch (analyticsError: any) {
@@ -114,9 +114,12 @@ PLEASE VERY CAREFULLY:
    with the values printed above (and in your 'src/lib/firebaseConfig.ts' file).
 4. Ensure there are NO typos and that all values are copied exactly from your Firebase project.
 5. Ensure the project ID listed (${firebaseConfig.projectId}) is for an ACTIVE and CORRECTLY SETUP Firebase project.
+6. In Firebase Console > Authentication > Sign-in method: Ensure 'Email/Password' provider is ENABLED.
+7. In Google Cloud Console (for project ${firebaseConfig.projectId}) > APIs & Services > Library: Ensure 'Identity Toolkit API' is ENABLED.
 
 Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
 
+    // Provide more specific advice if it's the exact "configuration-not-found" error
     if (error.code === 'auth/configuration-not-found' || (error.message && error.message.toLowerCase().includes('configuration-not-found'))) {
         alertMessage = `FirebaseConfig.ts: Firebase initialization failed with 'auth/configuration-not-found'.
         This strongly indicates the configuration object in src/lib/firebaseConfig.ts
@@ -146,8 +149,9 @@ Fix these values in 'src/lib/firebaseConfig.ts' and reload the page.`;
 
     if (typeof window !== "undefined") {
       const preStyle = "font-family: monospace; white-space: pre-wrap; padding: 10px; background-color: #fff0f0; border: 1px solid red; color: red;";
-      console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\\n"), preStyle);
-      alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\\n...(see console for full details)" : ""));
+      // Use the corrected regex for replacing <br> tags for console display
+      console.log("%c" + alertMessage.replace(/<br\s*\/?>/gi, "\n"), preStyle);
+      alert(alertMessage.substring(0, 1000) + (alertMessage.length > 1000 ? "\n...(see console for full details)" : ""));
     }
 
     // Intentionally make app unusable if config is bad
