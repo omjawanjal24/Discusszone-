@@ -96,7 +96,7 @@ const teamMembers = [
   {
     name: "Kalyani Ghokle",
     role: "Asst. Librarian",
-    imageUrl: "https://placehold.co/150x150.png", 
+    imageUrl: "https://placehold.co/150x150.png",
     linkedinUrl: null,
     avatarHint: "KG",
     dataAiHint: "placeholder avatar",
@@ -134,7 +134,7 @@ export default function HomePage() {
           >
             <Link href="/booking" passHref>
               <Button size="lg" className="font-semibold bg-yellow-500 hover:bg-yellow-600 text-black">
-                Book a Room
+                Book a Slot
               </Button>
             </Link>
             <Link href="/signup" passHref>
@@ -199,12 +199,16 @@ export default function HomePage() {
                 className="flex flex-col items-center text-center animate-scaleIn"
                 style={{ animationDelay: `${0.2 + index * 0.15}s` }}
               >
-                <Avatar className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg" style={member.name === "OM Jawanjal" ? { border: '2px solid red' } : {}}>
+                <Avatar 
+                  className="h-36 w-36 mb-4 border-4 border-slate-700 shadow-lg" 
+                  style={member.name === "OM Jawanjal" ? { border: '2px solid red' } : {}}
+                >
                   <AvatarImage
                     src={member.imageUrl}
                     alt={member.name}
                     width={150}
                     height={150}
+                    key={member.imageUrl}
                     data-ai-hint={member.dataAiHint}
                   />
                   <AvatarFallback className="text-4xl bg-slate-600 text-slate-100">{member.avatarHint}</AvatarFallback>

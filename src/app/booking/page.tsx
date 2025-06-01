@@ -250,7 +250,7 @@ export default function BookingPage() {
     <AuthGuard>
       <div className="space-y-8">
         <div className="text-center">
-          <h1 className="font-headline text-3xl md:text-4xl font-bold">Book a Discussion Room</h1>
+          <h1 className="font-headline text-3xl md:text-4xl font-bold">Book a Discussion Slot</h1>
           <p className="text-muted-foreground mt-2">
             Select an available time slot for {format(currentDate, 'eeee, MMMM do, yyyy')}.
           </p>
