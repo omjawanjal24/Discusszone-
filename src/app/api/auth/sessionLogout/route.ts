@@ -3,9 +3,22 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { adminAuth, SESSION_COOKIE_NAME, verifySessionCookie } from '@/lib/firebaseAdmin';
 
+// Check Admin SDK initialization status when the module loads or is first accessed
+if (!adminAuth) { // Only adminAuth is strictly needed for logout operations on tokens
+    console.error(
+        `CRITICAL_ADMIN_SDK_INIT_FAILURE: API Route /api/auth/sessionLogout
+        Firebase Admin SDK (adminAuth) is not initialized.
+        This means the Firebase Admin SDK failed to initialize in src/lib/firebaseAdmin.ts.
+        This is typically due to missing or incorrect Firebase service account credentials (environment variables).
+        Please check your server logs when the application STARTS for messages from 'src/lib/firebaseAdmin.ts' for details.
+        Ensure GOOGLE_APPLICATION_CREDENTIALS or (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY) are correctly set in your server's environment.
+        Logout cannot proceed without a properly initialized Admin SDK.`
+    );
+}
+
 export async function POST(request: NextRequest) {
   if (!adminAuth) {
-    console.error('/api/auth/sessionLogout: Firebase Admin SDK not initialized.');
+    console.error('/api/auth/sessionLogout: Firebase Admin SDK not initialized at the time of POST request.');
     return NextResponse.json({ error: 'Firebase Admin SDK not initialized. Cannot process logout.' }, { status: 500 });
   }
   

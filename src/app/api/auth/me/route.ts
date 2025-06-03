@@ -5,9 +5,22 @@ import { adminAuth, adminDb, verifySessionCookie, SESSION_COOKIE_NAME } from '@/
 import type { User } from '@/types';
 import { Timestamp } from 'firebase-admin/firestore';
 
+// Check Admin SDK initialization status when the module loads or is first accessed
+if (!adminAuth || !adminDb) {
+    console.error(
+        `CRITICAL_ADMIN_SDK_INIT_FAILURE: API Route /api/auth/me
+        Firebase Admin SDK (adminAuth or adminDb) is not initialized.
+        This means the Firebase Admin SDK failed to initialize in src/lib/firebaseAdmin.ts.
+        This is typically due to missing or incorrect Firebase service account credentials (environment variables).
+        Please check your server logs when the application STARTS for messages from 'src/lib/firebaseAdmin.ts' for details.
+        Ensure GOOGLE_APPLICATION_CREDENTIALS or (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY) are correctly set in your server's environment.
+        User session check cannot proceed without a properly initialized Admin SDK.`
+    );
+}
+
 export async function GET(request: NextRequest) {
   if (!adminAuth || !adminDb) {
-    console.error('/api/auth/me: Firebase Admin SDK not initialized.');
+    console.error('/api/auth/me: Firebase Admin SDK not initialized at the time of GET request.');
     return NextResponse.json({ error: 'Firebase Admin SDK not initialized. Cannot authenticate.' }, { status: 500 });
   }
 
