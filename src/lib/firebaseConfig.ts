@@ -114,23 +114,24 @@ This is highly unusual. Check if multiple Firebase instances are being managed o
                     localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
                 });
                 console.log("FirebaseConfig.ts: Firestore successfully configured for multi-tab persistent cache.");
-                // Alert only once per session to avoid annoyance during development hot reloads.
-                if (!sessionStorage.getItem('firestorePersistenceConfigAlertShown')) {
-                    alert("FirebaseConfig.ts: Firestore is now configured for enhanced offline data access (multi-tab). Data accessed online will be cached locally.");
-                    sessionStorage.setItem('firestorePersistenceConfigAlertShown', 'true');
-                }
+                // REMOVED SUCCESS ALERT: The console log is sufficient for debugging success.
+                // Alerts for failures (below) are more critical for user/dev awareness.
             } catch (error: any) {
                 console.error("FirebaseConfig.ts: ERROR - Failed to initialize Firestore with multi-tab persistent cache:", error);
-                // Fallback to default Firestore initialization (which uses memory cache if persistence fails)
                 db = getFirestore(app); // Re-initialize with default (likely memory cache)
                 console.warn("FirebaseConfig.ts: Firestore initialized with default (likely memory) cache due to persistent cache setup error.");
                 if (!sessionStorage.getItem('firestorePersistenceErrorAlertShown')) {
-                    alert(`FirebaseConfig.ts: Firestore OFFLINE DATA MIGHT NOT WORK as expected. Error during advanced offline setup: ${error.message}. Using temporary cache.`);
+                    let alertMessage = `FirebaseConfig.ts: Firestore OFFLINE DATA MIGHT NOT WORK as expected. Error during advanced offline setup: ${error.message}. Using temporary cache.`;
+                    if (error.code === 'failed-precondition' && error.message.includes('multiple tabs')) {
+                        alertMessage = `FirebaseConfig.ts: Firestore OFFLINE DATA MIGHT NOT WORK as expected because MULTIPLE TABS of this application are open. Please close other tabs and refresh. Using temporary cache.`;
+                    } else if (error.code === 'unimplemented') {
+                         alertMessage = `FirebaseConfig.ts: Firestore OFFLINE DATA MIGHT NOT WORK as expected because your browser/environment doesn't support IndexedDB fully (e.g., private browsing mode). Using temporary cache.`;
+                    }
+                    alert(alertMessage);
                     sessionStorage.setItem('firestorePersistenceErrorAlertShown', 'true');
                 }
             }
         } else { // Server-side or non-browser environment
-            // Use memoryLocalCache for explicit server-side configuration or getFirestore for default behavior.
             db = initializeFirestore(app, { localCache: memoryLocalCache() });
             console.log("FirebaseConfig.ts: Firebase Firestore initialized for server/non-browser (explicit memory cache).");
         }
@@ -208,7 +209,3 @@ Fix these values in 'src/lib/firebaseConfig.ts' or your Firebase project setting
 }
 
 export { app, auth, db, analytics, Timestamp };
-    
-    
-
-    
