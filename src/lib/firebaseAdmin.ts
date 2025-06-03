@@ -1,5 +1,7 @@
+
 // src/lib/firebaseAdmin.ts
 import * as admin from 'firebase-admin';
+import type { DecodedIdToken } from 'firebase-admin/auth';
 
 // --- IMPORTANT: Configure your service account credentials ---
 // You need to provide your Firebase service account credentials to this SDK.
@@ -62,15 +64,12 @@ if (!admin.apps.length) {
     console.error('Firebase Admin SDK initialization error:', error.message);
     console.error('Detailed error stack:', error.stack);
     console.error('Ensure your service account credentials are set correctly as environment variables. Project ID from client config:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'Not Set (Client Side)');
-    // Do not re-throw, allow app to continue if admin features are not critical for all parts.
-    // The `adminAuth` and `adminDb` exports will be null if initialization fails.
   }
 } else {
-  initialized = true; // Already initialized
+  initialized = true; 
   console.log('Firebase Admin SDK already initialized.');
 }
 
-// Export null if not initialized to allow for graceful degradation
 export const adminAuth = initialized ? admin.auth() : null;
 export const adminDb = initialized ? admin.firestore() : null;
 export const adminApp = initialized ? admin.app() : null;
@@ -81,7 +80,7 @@ export const adminApp = initialized ? admin.app() : null;
  * @returns A promise that resolves with the decoded ID token if successful.
  * @throws Throws an error if the Admin SDK is not initialized or if token verification fails.
  */
-export async function verifyFirebaseIdToken(token: string): Promise<admin.auth.DecodedIdToken> {
+export async function verifyFirebaseIdToken(token: string): Promise<DecodedIdToken> {
   if (!adminAuth) {
     console.error('Attempted to verify ID token, but Firebase Admin SDK is not initialized.');
     throw new Error('Firebase Admin SDK not initialized. Cannot verify ID token.');
@@ -91,23 +90,30 @@ export async function verifyFirebaseIdToken(token: string): Promise<admin.auth.D
     return decodedToken;
   } catch (error) {
     console.error('Error verifying Firebase ID token:', error);
-    // You might want to throw a more specific error or handle different error codes
     throw new Error('Invalid or expired Firebase ID token.');
   }
 }
 
-// You can add more admin utility functions here as needed.
-// For example, a function to get user details by UID:
-// export async function getAdminUser(uid: string): Promise<admin.auth.UserRecord | null> {
-//   if (!adminAuth) {
-//     console.warn('Firebase Admin SDK not initialized. Cannot get user.');
-//     return null;
-//   }
-//   try {
-//     const userRecord = await adminAuth.getUser(uid);
-//     return userRecord;
-//   } catch (error) {
-//     console.error(`Error fetching user ${uid} with Admin SDK:`, error);
-//     return null;
-//   }
-// }
+/**
+ * Verifies a Firebase session cookie.
+ * @param sessionCookie The Firebase session cookie to verify.
+ * @param checkRevoked Check if the session cookie has been revoked.
+ * @returns A promise that resolves with the decoded ID token if successful.
+ * @throws Throws an error if the Admin SDK is not initialized or if cookie verification fails.
+ */
+export async function verifySessionCookie(sessionCookie: string, checkRevoked = true): Promise<DecodedIdToken> {
+  if (!adminAuth) {
+    console.error('Attempted to verify session cookie, but Firebase Admin SDK is not initialized.');
+    throw new Error('Firebase Admin SDK not initialized. Cannot verify session cookie.');
+  }
+  try {
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, checkRevoked);
+    return decodedClaims;
+  } catch (error) {
+    console.error('Error verifying Firebase session cookie:', error);
+    throw new Error('Invalid or expired Firebase session cookie.');
+  }
+}
+
+export const SESSION_COOKIE_NAME = 'fb-session';
+export const SESSION_COOKIE_EXPIRES_IN = 60 * 60 * 24 * 14 * 1000; // 14 days in milliseconds

@@ -6,13 +6,14 @@ import type { LoginFormValues, SignupFormValues } from '@/lib/validation';
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
-import { auth, db, Timestamp } from '@/lib/firebaseConfig';
+import { auth, db, Timestamp as ClientTimestamp } from '@/lib/firebaseConfig'; // Renamed Timestamp to ClientTimestamp
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
+  signOut as firebaseClientSignOut, // Renamed signOut to avoid conflict
   onAuthStateChanged,
-  type User as FirebaseUser
+  type User as FirebaseUser,
+  getIdToken,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
@@ -27,7 +28,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_EMAIL = 'om.jawanjal@mitwpu.edu.in';
+const ADMIN_EMAIL = 'om.jawanjal@mitwpu.edu.in'; // Consider moving to .env if it can change
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -35,92 +36,93 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!auth || !db) {
-      console.error("AuthContext: Firebase auth or db not initialized. Cannot set up onAuthStateChanged listener.");
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      setLoading(true);
-      if (firebaseUser) {
-        try {
-          const userDocRef = doc(db, "users", firebaseUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-
-          if (userDocSnap.exists()) {
-            const profileData = userDocSnap.data();
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              isVerified: firebaseUser.emailVerified,
-              prn: profileData.prn,
-              gender: profileData.gender,
-              role: profileData.role,
-              isAdmin: profileData.isAdmin || firebaseUser.email === ADMIN_EMAIL,
-              avatarUrl: profileData.avatarUrl || firebaseUser.photoURL,
-              createdAt: profileData.createdAt instanceof Timestamp ? profileData.createdAt.toDate() : profileData.createdAt,
-            });
-            console.log(`AuthContext: User profile for ${firebaseUser.email} loaded from Firestore. Served from cache: ${userDocSnap.metadata.fromCache}`);
-          } else {
-            console.warn("AuthContext: User profile not found in Firestore for UID:", firebaseUser.uid, " Email:", firebaseUser.email);
-            toast({
-              title: "Profile Incomplete",
-              description: `User profile data for ${firebaseUser.email} is missing. Using minimal profile.`,
-              variant: "warning",
-            });
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              isVerified: firebaseUser.emailVerified,
-              isAdmin: firebaseUser.email === ADMIN_EMAIL,
-            });
-          }
-        } catch (error: any) {
-          console.error("AuthContext: Error fetching user profile from Firestore:", error);
-          let description = "Could not load your full profile. Using minimal data.";
-          if (error.message && (error.message.includes("client is offline") || error.message.includes("Failed to get document because the client is offline"))) {
-              description = "You are offline. Full profile data could not be loaded from the server. Using cached or minimal data if available.";
-          }
-          toast({
-            title: "Profile Load Issue",
-            description: description,
-            variant: "warning",
-          });
-          const minimalUser = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              isVerified: firebaseUser.emailVerified,
-              isAdmin: firebaseUser.email === ADMIN_EMAIL,
-          };
-          setUser(minimalUser);
-          console.log("AuthContext: Fallback to minimal user data due to Firestore fetch error for:", firebaseUser.email, "Minimal data:", minimalUser);
+  const fetchUserSession = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          setUser(data.user);
+          console.log("AuthContext: User session restored from backend:", data.user.email);
+        } else {
+          setUser(null);
         }
       } else {
         setUser(null);
-        console.log("AuthContext: No Firebase user authenticated.");
+        // No toast here, as it's a normal state if no session exists
       }
+    } catch (error) {
+      console.error("AuthContext: Error fetching user session:", error);
+      setUser(null);
+      toast({ title: "Session Check Error", description: "Could not verify your session.", variant: "warning" });
+    } finally {
       setLoading(false);
-    });
+    }
+  }, [toast]);
 
-    return () => unsubscribe();
-  }, []); // Empty dependency array ensures this runs once on mount and cleans up on unmount
+  useEffect(() => {
+    fetchUserSession();
+
+    // Optional: Listen to Firebase client auth state changes for cross-tab sync or external events
+    // This is secondary to the session cookie now.
+    const unsubscribeClientAuth = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (!loading) { // Only react if initial session load is complete
+        if (!firebaseUser && user) {
+          // Firebase client signed out (e.g., token revoked, user deleted), but server session might exist.
+          // Force a re-check of server session.
+          console.log("AuthContext (onAuthStateChanged): Firebase client user logged out. Re-checking server session.");
+          await fetchUserSession();
+        } else if (firebaseUser && !user) {
+          // Firebase client has a user, but server session check (/api/auth/me) didn't find one.
+          // This could mean cookie expired or was cleared. User might need to log in again.
+          // Or, try to create a session if ID token is fresh. For simplicity, we'll rely on explicit login for now.
+           console.log("AuthContext (onAuthStateChanged): Firebase client user detected, but no server session. User may need to re-login to establish server session.");
+        }
+      }
+    });
+    
+    return () => {
+      unsubscribeClientAuth();
+    };
+  }, [fetchUserSession, loading, user]);
+
 
   const login = useCallback(async (credentials: LoginFormValues) => {
     if (!auth) {
-      toast({ title: "Authentication Error", description: "Firebase Auth not initialized.", variant: "destructive" });
-      return Promise.reject(new Error("Firebase Auth not initialized."));
+      toast({ title: "Authentication Error", description: "Firebase Auth (client) not initialized.", variant: "destructive" });
+      return Promise.reject(new Error("Firebase Auth (client) not initialized."));
     }
     try {
       const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-      toast({ title: "Login Successful!", description: `Welcome back, ${userCredential.user.email}!` });
-      const queryParams = new URLSearchParams(window.location.search);
-      const redirectUrl = queryParams.get('redirect');
-      router.push(redirectUrl || '/booking');
+      const idToken = await getIdToken(userCredential.user);
+
+      const res = await fetch('/api/auth/sessionLogin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user); // Set user from backend response
+        toast({ title: "Login Successful!", description: `Welcome back, ${data.user.email}!` });
+        const queryParams = new URLSearchParams(window.location.search);
+        const redirectUrl = queryParams.get('redirect');
+        router.push(redirectUrl || '/booking');
+      } else {
+        const errorData = await res.json();
+        toast({ title: "Login Failed", description: errorData.error || "Could not establish session.", variant: "destructive" });
+        await firebaseClientSignOut(auth); // Sign out client if backend session failed
+        return Promise.reject(new Error(errorData.error || "Could not establish session."));
+      }
     } catch (error: any) {
-      console.error("Firebase login error:", error);
-      toast({ title: "Login Failed", description: error.message || "Invalid email or password.", variant: "destructive" });
+      console.error("Login process error:", error);
+      let message = error.message || "An unexpected error occurred during login.";
+      if (error.code && error.code.startsWith("auth/")) { // Firebase client auth errors
+        message = error.message;
+      }
+      toast({ title: "Login Failed", description: message, variant: "destructive" });
       return Promise.reject(error);
     }
   }, [router, toast]);
@@ -134,59 +136,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, signupData.email, signupData.password);
       const firebaseUser = userCredential.user;
 
-      const userProfile: User = {
-        uid: firebaseUser.uid,
+      const userProfileForDb: Omit<User, 'isVerified' | 'uid'> & { createdAt: any } = { // Use 'any' for createdAt temporarily for Firestore Admin vs Client Timestamp
         email: firebaseUser.email,
         prn: signupData.prn,
         gender: signupData.gender,
         role: signupData.role,
         isAdmin: signupData.email === ADMIN_EMAIL,
-        isVerified: firebaseUser.emailVerified, // This will typically be false until email verification
         avatarUrl: '', // Default or generated avatar URL
-        createdAt: Timestamp.fromDate(new Date()),
+        createdAt: ClientTimestamp.fromDate(new Date()), // Use client Timestamp for client-side setDoc
       };
-
-      await setDoc(doc(db, "users", firebaseUser.uid), userProfile);
-      console.log("AuthContext: User profile created in Firestore for UID:", firebaseUser.uid);
       
-      // User is now set via onAuthStateChanged
-      toast({ title: "Signup Successful!", description: "Account created. You are now logged in."});
-      router.push('/booking'); // Redirect to booking or dashboard page
+      // Save profile to Firestore using client SDK
+      await setDoc(doc(db, "users", firebaseUser.uid), userProfileForDb);
+      console.log("AuthContext: User profile created in Firestore for UID:", firebaseUser.uid);
 
+      // After signup, automatically log in to create session cookie
+      const idToken = await getIdToken(firebaseUser);
+      const res = await fetch('/api/auth/sessionLogin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        toast({ title: "Signup Successful!", description: "Account created and session started." });
+        router.push('/booking');
+      } else {
+        const errorData = await res.json();
+        toast({ title: "Signup Session Failed", description: errorData.error || "Could not start session after signup.", variant: "warning" });
+        // User is created in Firebase Auth & DB, but session cookie failed. They might need to log in manually.
+        router.push('/login'); 
+        return Promise.reject(new Error(errorData.error || "Could not start session after signup."));
+      }
     } catch (error: any) {
       console.error("Firebase signup error:", error);
+      let message = error.message || "Could not create account. Please try again.";
       if (error.code === 'auth/email-already-in-use') {
-        toast({
-          title: "Signup Failed",
-          description: "This email address is already in use. Please try logging in or use a different email.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Signup Failed",
-          description: error.message || "Could not create account. Please try again.",
-          variant: "destructive",
-        });
+        message = "This email address is already in use. Please try logging in or use a different email.";
       }
+      toast({ title: "Signup Failed", description: message, variant: "destructive" });
       return Promise.reject(error);
     }
   }, [router, toast]);
 
   const logout = useCallback(async () => {
-    if (!auth) {
-      toast({ title: "Authentication Error", description: "Firebase Auth not initialized.", variant: "destructive" });
-      return Promise.reject(new Error("Firebase Auth not initialized."));
-    }
     try {
-      await signOut(auth);
-      // setUser(null) is handled by onAuthStateChanged
-      router.push('/login');
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    } catch (error: any) {
-      console.error("Firebase logout error:", error);
-      toast({ title: "Logout Failed", description: error.message || "Could not log out.", variant: "destructive" });
-      return Promise.reject(error);
+      await fetch('/api/auth/sessionLogout', { method: 'POST' });
+    } catch (error) {
+      console.error("AuthContext: Error calling /api/auth/sessionLogout:", error);
+      // Continue with client-side logout anyway
     }
+    
+    if (auth) {
+      try {
+        await firebaseClientSignOut(auth);
+      } catch (error: any) {
+        console.error("Firebase client signOut error:", error);
+        // Non-critical if backend logout succeeded
+      }
+    }
+    setUser(null); // Clear user state immediately
+    router.push('/login');
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
   }, [router, toast]);
 
   return (
@@ -196,7 +209,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout,
       signup,
       loading,
-      isAuthenticated: !!user && !loading // More robust isAuthenticated check
+      isAuthenticated: !!user && !loading
     }}>
       {children}
     </AuthContext.Provider>
